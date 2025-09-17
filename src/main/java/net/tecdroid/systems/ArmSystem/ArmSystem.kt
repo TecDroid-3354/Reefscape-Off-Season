@@ -2,6 +2,7 @@
 
 package net.tecdroid.systems.ArmSystem
 
+import com.ctre.phoenix6.hardware.CANrange
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
@@ -168,13 +169,18 @@ enum class PoseCommands(val pose: ArmPose, val order: ArmOrder) {
     CoralStation(ArmPoses.CoralStation.pose, ArmOrders.EJW.order),
 }
 
+data class CANRanges(
+    val centerCanRange: CANrange,
+    val rightCANRange: CANrange,
+    val leftCANRange: CANrange,
+)
+
 
 class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Double) -> Boolean) : Sendable {
     val wrist = Wrist()
     val elevator = Elevator()
     val joint = ElevatorJoint()
-    val sensor = DigitalInput(3)
-    val intake = Intake(sensor)
+    val intake = Intake(listOf(CANrange(0), CANrange(0), CANrange(0)))
 
     private var targetVoltage = 0.0.volts
 
@@ -276,7 +282,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
         tab.addDouble("Target Voltage") { targetVoltage.`in`(Volts) }
     }
 
-    fun getSensorRead() : Boolean = !sensor.get()
+    fun getSensorRead() : Boolean = intake.hasCoral()
 
     fun scoringSequence(pose: PoseCommands): Command {
         return SequentialCommandGroup(
@@ -325,7 +331,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
 
         // Change to coral state if we are in score state, and we just pull out a coral
         stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !getSensorRead() }, States.CoralState, Phase.Teleop)
-
+        //stateMachine.addCondition()
     }
 
     fun assignCommands(controller: CompliantXboxController) {
