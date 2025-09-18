@@ -9,14 +9,15 @@ import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.Sendable
 import edu.wpi.first.util.sendable.SendableBuilder
-import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand
 import net.tecdroid.input.CompliantXboxController
+import net.tecdroid.subsystems.climber.Climber
 import net.tecdroid.subsystems.elevator.Elevator
 import net.tecdroid.subsystems.elevatorjoint.ElevatorJoint
 import net.tecdroid.subsystems.intake.Intake
@@ -167,19 +168,14 @@ enum class PoseCommands(val pose: ArmPose, val order: ArmOrder) {
     L3(ArmPoses.L3.pose, ArmOrders.JEW.order),
     L2(ArmPoses.L2.pose, ArmOrders.EJW.order),
     CoralStation(ArmPoses.CoralStation.pose, ArmOrders.EJW.order),
+    Processor(ArmPoses.Processor.pose, ArmOrders.EJW.order)
 }
 
-data class CANRanges(
-    val centerCanRange: CANrange,
-    val rightCANRange: CANrange,
-    val leftCANRange: CANrange,
-)
-
-
-class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Double) -> Boolean) : Sendable {
+class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Double) -> Boolean, val controller: CompliantXboxController) : Sendable {
     val wrist = Wrist()
     val elevator = Elevator()
     val joint = ElevatorJoint()
+    val climber = Climber()
     val intake = Intake(listOf(CANrange(0), CANrange(0), CANrange(0)))
 
     private var targetVoltage = 0.0.volts
@@ -319,22 +315,25 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
         States.AlgaeState.setInitialCommand(intake.setVoltageCommand { 1.5.volts })
 
         // Go to passive position after score a coral
-        /*States.ScoreState.setEndCommand(SequentialCommandGroup(
+        States.ScoreState.setEndCommand(SequentialCommandGroup(
             WaitCommand(0.05.seconds),
             disableIntake(),
-            setPoseCommand(PoseCommands.CoralStation)))*/
-
-        // Change state conditions
+            setPoseCommand(PoseCommands.CoralStation)))
+        //Set a physical condition for triggering the climb state
+        stateMachine.addCondition({ controller.rightTrigger().asBoolean && controller.leftTrigger().asBoolean }, States.ClimbState,
+            Phase.Teleop )
+        // When climb state is triggered, the processor pose will be scheduled so climber is able to work.
+        States.ClimbState.setInitialCommand(setPoseCommand(PoseCommands.Processor))
 
         // Change to score state when coral is detected
         stateMachine.addCondition({ getSensorRead() }, States.ScoreState, Phase.Teleop)
 
         // Change to coral state if we are in score state, and we just pull out a coral
         stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !getSensorRead() }, States.CoralState, Phase.Teleop)
-        //stateMachine.addCondition()
+
     }
 
-    fun assignCommands(controller: CompliantXboxController) {
+    fun assignCommands() {
         assignStatesCommands()
 
         controller.povLeft().onTrue(
@@ -360,6 +359,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
                             ArmOrders.JEW.order
                         ).andThen({ setIsLow(false) }),
                         disableIntake())
+
+                    States.ClimbState -> Commands.none()
                 })
             })
         )
@@ -382,6 +383,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
                         if (isLow()) ArmOrders.JWE.order else ArmOrders.EWJ.order
                     ).andThen({ setIsLow(false) }),
                     disableIntake())
+
+                States.ClimbState -> Commands.none()
             })
         }))
 
@@ -403,6 +406,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
                         if (isLow()) ArmOrders.JWE.order else ArmOrders.EWJ.order
                     ).andThen({ setIsLow(false) }),
                     disableIntake())
+
+                States.ClimbState -> Commands.none()
             })
         }))
 
@@ -422,6 +427,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
                         ArmOrders.EJW.order
                     ),
                     Commands.runOnce({ stateMachine.changeState(States.IntakeState)}))
+
+                States.ClimbState -> InstantCommand({ climber.setClimberWristAngle(45.0.degrees) })
             })
         }))
 
@@ -434,6 +441,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
                     Commands.runOnce({ stateMachine.changeState(States.IntakeState)}),
                     enableIntake()
                 )
+                States.ClimbState -> InstantCommand({climber.setClimberRollersVoltage(8.0.volts)})
                 else -> enableIntake()
             })
         })).onFalse(disableIntake())

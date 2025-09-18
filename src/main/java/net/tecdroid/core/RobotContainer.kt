@@ -31,7 +31,7 @@ class RobotContainer {
     private val controller = CompliantXboxController(driverControllerId)
     private val swerve = SwerveDrive(swerveDriveConfiguration)
     private val stateMachine = StateMachine(States.CoralState)
-    private val arm = ArmSystem(stateMachine, ::limeLightIsAtSetPoint)
+    private val arm = ArmSystem(stateMachine, ::limeLightIsAtSetPoint, controller)
     private val limelightController = LimelightController(
         swerve,
         { chassisSpeeds -> swerve.driveRobotOriented(chassisSpeeds) },
@@ -55,7 +55,7 @@ class RobotContainer {
         swerve.heading = 0.0.degrees
 
         arm.publishShuffleBoardData()
-        arm.assignCommands(controller)
+        arm.assignCommands()
     }
 
 
