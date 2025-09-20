@@ -33,7 +33,8 @@ class Climber :
     override val absoluteEncoder = ThroughBoreAbsoluteEncoder(
         port = config.absoluteEncoderPort,
         offset = config.absoluteEncoderOffset,
-        inverted = config.absoluteEncoderIsInverted
+        inverted = config.absoluteEncoderIsInverted,
+        brand = config.absoluteEncoderBrand
     )
 
     override val forwardsRunningCondition  = { angle < config.measureLimits.relativeMaximum }
@@ -74,7 +75,7 @@ class Climber :
     }
 
     /**
-     * Also for the Climber's WRIST
+     * Exact same as [setAngle], given this subsystem does not need two different PID, SVAG slot.
      */
     override fun setAngle(targetAngle: Angle, slot: Int) {
         // Do not need other slot
@@ -83,10 +84,18 @@ class Climber :
 
     /**
      * This method will give voltage to the Climber's WRIST, not rollers.
+     * Just for safety, running conditions are checked inside the method, though it's redundant
+     * with the SysId running condition. SysId SHOULD BE THE ONLY PLACE WHERE THIS METHOD IS CALLED.
+     * NOT INTENDED TO USE FOR ROBOT CONTROL.
      */
     override fun setVoltage(voltage: Voltage) {
-        val request = VoltageOut(voltage)
-        wristController.setControl(request)
+        if (angle < config.measureLimits.relativeMaximum && angle > config.measureLimits.relativeMinimum) {
+            val request = VoltageOut(voltage)
+            wristController.setControl(request)
+        } else {
+            val request = VoltageOut(0.0)
+            wristController.setControl(request)
+        }
     }
 
     /**

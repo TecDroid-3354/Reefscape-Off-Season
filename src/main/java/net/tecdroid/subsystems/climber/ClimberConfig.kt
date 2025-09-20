@@ -15,6 +15,7 @@ import net.tecdroid.util.amps
 import net.tecdroid.util.degrees
 import net.tecdroid.util.rotations
 import net.tecdroid.util.seconds
+import net.tecdroid.wrappers.ThroughBoreBrand
 
 data class ClimberConfig(
     val rollersMotorControllerId: NumericId,
@@ -28,6 +29,7 @@ data class ClimberConfig(
     val absoluteEncoderPort: NumericId,
     val absoluteEncoderIsInverted: Boolean,
     val absoluteEncoderOffset: Angle,
+    val absoluteEncoderBrand: ThroughBoreBrand,
 
     val reduction: Reduction,
     val measureLimits: MeasureLimits<AngleUnit>,
@@ -46,15 +48,16 @@ val climberConfig = ClimberConfig(
 
     absoluteEncoderPort = NumericId(0),
     absoluteEncoderIsInverted = false,
-    absoluteEncoderOffset = (0.1511).rotations,
+    absoluteEncoderOffset = (0.0).rotations,
+    absoluteEncoderBrand = ThroughBoreBrand.WCP,
 
     reduction = Reduction(214.285714),
 
     measureLimits = MeasureLimits(
         absoluteMinimum = 0.0.rotations,
-        relativeMinimum = 0.0.rotations,
-        relativeMaximum = 0.0.rotations,
-        absoluteMaximum = 0.0.rotations,
+        relativeMinimum = 0.01.rotations,
+        relativeMaximum = 0.02.rotations,
+        absoluteMaximum = 0.03.rotations,
     ),
 
     controlGains = ControlGains(
@@ -66,8 +69,8 @@ val climberConfig = ClimberConfig(
     ),
 
     motionTargets = AngularMotionTargets(
-        cruiseVelocity = 0.5.rotations.per(Second),
-        accelerationTimePeriod = 0.1.seconds,
-        jerkTimePeriod = 0.1.seconds
+        cruiseVelocity = 0.0.rotations.per(Second),
+        accelerationTimePeriod = 0.0.seconds,
+        jerkTimePeriod = 0.0.seconds
     )
 )
