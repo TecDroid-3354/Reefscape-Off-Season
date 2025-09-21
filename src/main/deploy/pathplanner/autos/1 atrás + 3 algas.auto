@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "C1-Back-bargeToReef"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "A1-Back-reefToBarge"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "A2-Back-bargeToReef"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "A2-Back-reefToBarge"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "A3-Back-bargeToReef"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "A3-Back-reefToBarge"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
