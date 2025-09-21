@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.31375,
+        "y": 2.6404999999999994
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.059000000000001,
+        "y": 2.3089999999999997
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.761,
+        "y": 5.4095
+      },
+      "prevControl": {
+        "x": 7.1370000000000005,
+        "y": 5.02925
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.2,
+    "maxAcceleration": 5.8,
+    "maxAngularVelocity": 862.0,
+    "maxAngularAcceleration": 102.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -178.78112476486865
+  },
+  "reversed": false,
+  "folder": "3 Algee Centro",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -58.49573328079611
+  },
+  "useDefaultConstraints": true
+}
