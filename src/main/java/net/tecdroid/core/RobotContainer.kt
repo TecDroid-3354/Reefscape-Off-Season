@@ -8,18 +8,14 @@ import edu.wpi.first.networktables.StructPublisher
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
-import edu.wpi.first.wpilibj2.command.button.Trigger
 import net.tecdroid.autonomous.PathPlannerAutonomous
 import net.tecdroid.constants.GenericConstants.driverControllerId
 import net.tecdroid.input.CompliantXboxController
 import net.tecdroid.subsystems.drivetrain.SwerveDrive
 import net.tecdroid.subsystems.drivetrain.swerveDriveConfiguration
-import net.tecdroid.systems.ArmSystem.ArmOrders
-import net.tecdroid.systems.ArmSystem.ArmPoses
 import net.tecdroid.systems.ArmSystem.ArmSystem
 import net.tecdroid.systems.ArmSystem.ReefAppListener
 import net.tecdroid.systems.SwerveRotationLockSystem
-import net.tecdroid.util.NumericId
 import net.tecdroid.util.degrees
 import net.tecdroid.util.stateMachine.StateMachine
 import net.tecdroid.util.stateMachine.States
@@ -37,7 +33,7 @@ class RobotContainer {
         { chassisSpeeds -> swerve.driveRobotOriented(chassisSpeeds) },
         { swerve.heading.`in`(Degrees) }, swerve.maxSpeeds.times(0.75)
     )
-    private val pathPlannerAutonomous = PathPlannerAutonomous(swerve, limelightController, arm)
+    private val pathPlannerAutonomous = net.tecdroid.autonomous.PathPlannerAutonomous(swerve, limelightController, arm)
     private val swerveRotationLockSystem = SwerveRotationLockSystem(swerve, controller)
     private val reefAppListener = ReefAppListener()
 
