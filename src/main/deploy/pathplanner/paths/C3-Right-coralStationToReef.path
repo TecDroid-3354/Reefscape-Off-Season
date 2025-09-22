@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 3.8360655737704916,
-        "y": 2.5565061475409836
+        "x": 3.44047131147541,
+        "y": 1.9451331967213106
       },
       "prevControl": {
-        "x": 3.518145745879199,
-        "y": 2.2053277329476266
+        "x": 3.1225514835841173,
+        "y": 1.5939547821279536
       },
       "nextControl": null,
       "isLocked": false,
@@ -45,7 +45,7 @@
     "rotation": -122.82854179141249
   },
   "reversed": false,
-  "folder": "3 Derecha",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": -131.1859251657096

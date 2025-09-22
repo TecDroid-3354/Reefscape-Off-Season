@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 3.5782500000000006,
-        "y": 2.699
+        "x": 2.972950819672131,
+        "y": 2.1249487704918035
       },
       "prevControl": {
-        "x": 2.407987735054955,
-        "y": 1.6522607944418197
+        "x": 1.8026885547270854,
+        "y": 1.0782095649336234
       },
       "nextControl": null,
       "isLocked": false,
@@ -45,7 +45,7 @@
     "rotation": -118.44292862436325
   },
   "reversed": false,
-  "folder": "4CD",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": -127.87498365109823
