@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.4039999999999997,
-        "y": 0.7684999999999991
+        "x": 1.521,
+        "y": 0.72
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.3951271702714685,
-        "y": 1.6645366385170204
+        "x": 2.5121271702714685,
+        "y": 1.6160366385170213
       },
       "isLocked": false,
       "linkedName": null
@@ -45,7 +45,7 @@
     "rotation": -118.44292862436325
   },
   "reversed": false,
-  "folder": null,
+  "folder": "4CD",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -127.87498365109823

@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.14675,
-        "y": 4.161499999999999
+        "x": 7.624180327868852,
+        "y": 4.150870901639344
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.416855289550992,
-        "y": 4.156084160866051
+        "x": 7.281236653739939,
+        "y": 4.157833742531662
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.737090163934426,
-        "y": 4.161499999999999
+        "x": 7.2165983606557385,
+        "y": 4.150870901639344
       },
       "prevControl": {
-        "x": 6.409413482814517,
-        "y": 4.17067812428658
+        "x": 6.969505436243084,
+        "y": 4.188885197702829
       },
       "nextControl": null,
       "isLocked": false,
@@ -45,7 +45,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "1 Atrás + 3 algas",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

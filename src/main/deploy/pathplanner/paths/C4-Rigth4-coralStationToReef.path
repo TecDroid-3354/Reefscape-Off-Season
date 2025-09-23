@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.6380000000000001,
-        "y": 0.6125
+        "x": 1.546,
+        "y": 0.698
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.8856218600918067,
-        "y": 0.646900790756519
+        "x": 1.296,
+        "y": 0.698
       },
       "isLocked": false,
       "linkedName": null
@@ -45,7 +45,7 @@
     "rotation": -55.954062643398245
   },
   "reversed": false,
-  "folder": null,
+  "folder": "4 Derecha",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -134.52649194126508

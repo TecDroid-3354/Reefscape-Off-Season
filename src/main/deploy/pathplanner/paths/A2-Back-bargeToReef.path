@@ -16,11 +16,11 @@
     },
     {
       "anchor": {
-        "x": 5.754098360655737,
+        "x": 5.838012295081967,
         "y": 5.925051229508195
       },
       "prevControl": {
-        "x": 6.425409836065573,
+        "x": 6.509323770491803,
         "y": 5.949026639344262
       },
       "nextControl": null,
@@ -45,7 +45,7 @@
     "rotation": 59.300277449185614
   },
   "reversed": false,
-  "folder": null,
+  "folder": "1 Atrás + 3 algas",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
