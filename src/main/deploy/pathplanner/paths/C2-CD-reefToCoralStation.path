@@ -41,11 +41,11 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 0.0,
     "rotation": -126.70285503016314
   },
   "reversed": false,
-  "folder": "4CD",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": -119.74488129694248
