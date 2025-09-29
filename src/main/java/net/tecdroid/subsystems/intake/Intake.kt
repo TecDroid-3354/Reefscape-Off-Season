@@ -11,18 +11,33 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.InstantCommand
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand
 import edu.wpi.first.wpilibj2.command.button.Trigger
 import net.tecdroid.subsystems.util.generic.TdSubsystem
+import net.tecdroid.util.amps
 import net.tecdroid.util.inches
 import net.tecdroid.util.volts
 
+/** Intake Subsystem. Please look for the functions with specific names (Coral or Algae).
+ * [coralSensors] MUST have the following order:
+ * Left Intake CANRange, Center Intake CANRange, Right Intake CANRange, Inner Intake CANRange */
 class Intake(private val coralSensors: List<CANrange>) : TdSubsystem("Intake") {
     private val config = intakeConfig
     private val algaeMotorController = TalonFX(config.algaeMotorControllerId.id)
     private val coralRightMotorController = TalonFX(config.coralRightMotorControllerId.id)
     private val coralLeftMotorController = TalonFX(config.coralLeftMotorControllerId.id)
-    private val coralTrigger = Trigger { hasCoral() }
+    private val intakingCoralCanRanges = listOf<CANrange>(
+        coralSensors[0], coralSensors[1], coralSensors[2]
+    )
+    private val hasCoralCanRange = coralSensors[3] // 4th CANRange, inside the intake
+    // Above this threshold, the motor is considered to be forced (algae already inside)
+    private val algaeMotorAmpsThreshold = 20.0.amps
+
+    private val hasCoralTrigger = Trigger { hasCoral() }
+    private val intakingCoralTrigger = Trigger { intakingCoral() } // 1st - 3rd CANRange, before fully inside
+    private val hasAlgaeTrigger = Trigger { algaeMotorController.supplyCurrent.value > algaeMotorAmpsThreshold }
 
     override val forwardsRunningCondition = { true }
     override val backwardsRunningCondition = { true }
@@ -37,33 +52,58 @@ class Intake(private val coralSensors: List<CANrange>) : TdSubsystem("Intake") {
         get() = algaeMotorController.get()
 
     init {
-        require( coralSensors.size == 3 )
+        require( coralSensors.size == 4 ) { "Must have 4 coralSensors" }
         configureMotorInterface()
         configureCanRangesInterface()
 
-        coralTrigger.and { DriverStation.isTeleop() }
+        intakingCoralTrigger.and { DriverStation.isTeleop() }
+            .onTrue(InstantCommand({ setCoralVoltage(calculateCoralVoltage(8.0.volts)) }))
+
+        hasCoralTrigger.and { DriverStation.isTeleop() }
             .onTrue(InstantCommand({ setCoralVoltage(0.0.volts) }))
+
+        hasAlgaeTrigger.and { DriverStation.isTeleop() }
+            .onTrue(InstantCommand({ setAlgaeVoltage(2.0.volts) }))
     }
 
     /**
-     * Sets voltage to the CORAL roller motors dynamically based on lateral CANRange sensors.
+     * Sets voltage to the CORAL roller motors.
+     * @param coralMotorsVoltage Voltage to be applied to both motors.
      */
-    fun setCoralVoltage(baseVoltage: Voltage) {
+    fun setCoralVoltage(coralMotorsVoltage: Voltage) {
+        coralLeftMotorController.setControl(VoltageOut(coralMotorsVoltage))
+        coralRightMotorController.setControl(VoltageOut(coralMotorsVoltage))
+    }
+
+    /**
+     * Sets voltage to the CORAL roller motors.
+     * @param coralMotorsVoltage A [Pair] containing the desired voltage for each motor, from left to right.
+     */
+    private fun setCoralVoltage(coralMotorsVoltage: Pair<Voltage, Voltage>) {
+        coralLeftMotorController.setControl(VoltageOut(coralMotorsVoltage.first))
+        coralRightMotorController.setControl(VoltageOut(coralMotorsVoltage.second))
+    }
+
+    fun setCoralVoltageCommand(coralMotorsVoltage: Voltage): Command {
+        return InstantCommand({ setCoralVoltage(coralMotorsVoltage) })
+    }
+
+    /** This function is necessary for the coral to enter the intake smoothly and not get stuck.
+     * When the left CANRange detects the coral we perform leftVoltage += 2.0.volts.
+     * When the right CANRange detects the coral we perform rightVoltage += 2.0.volts
+     * @return A [Pair] in the following order: coralLeftMotorVoltage, coralRightMotorVoltage.*/
+    private fun calculateCoralVoltage(baseVoltage: Voltage) : Pair<Voltage, Voltage> {
         var leftVoltage = baseVoltage
         var rightVoltage = baseVoltage
 
-        val leftSensor = coralSensors[0]
-        val centerSensor = coralSensors[1]
-        val rightSensor = coralSensors[2]
+        WaitUntilCommand { intakingCoral() }
 
         when {
-            centerSensor.isDetected.value -> {}
-            leftSensor.isDetected.value -> { leftVoltage += 2.0.volts }
-            rightSensor.isDetected.value -> { rightVoltage += 2.0.volts }
+            intakingCoralCanRanges[1].isDetected.value -> {}                               // Center CANRange
+            intakingCoralCanRanges[0].isDetected.value -> { leftVoltage += 2.0.volts }     // Left CANRange
+            intakingCoralCanRanges[2].isDetected.value -> { rightVoltage += 2.0.volts }    // Right CANRange
         }
-
-        coralLeftMotorController.setControl(VoltageOut(leftVoltage))
-        coralRightMotorController.setControl(VoltageOut(rightVoltage))
+        return Pair(leftVoltage, rightVoltage)
     }
 
 
@@ -74,6 +114,10 @@ class Intake(private val coralSensors: List<CANrange>) : TdSubsystem("Intake") {
         setVoltage(voltage)
     }
 
+    fun setAlgaeVoltageCommand(voltage: Voltage): Command {
+        return InstantCommand({ setAlgaeVoltage(voltage) })
+    }
+
     /**
      * Sets voltage to the ALGAE rollers only.
      */
@@ -81,13 +125,15 @@ class Intake(private val coralSensors: List<CANrange>) : TdSubsystem("Intake") {
         algaeMotorController.setControl(VoltageOut(voltage))
     }
 
-    fun hasCoral(): Boolean {
-        for (sensor in coralSensors) {
+    private fun intakingCoral() : Boolean {
+        for (sensor in intakingCoralCanRanges) {
             if (sensor.isDetected.value) return true
         }
         return false
     }
 
+    /** Checks the inner CANRange, as it's the one that detects the coral when fully inside intake */
+    fun hasCoral(): Boolean = hasCoralCanRange.isDetected.value
     /**
      * Configures motors for both Coral & Algae Rollers independently.
      */
