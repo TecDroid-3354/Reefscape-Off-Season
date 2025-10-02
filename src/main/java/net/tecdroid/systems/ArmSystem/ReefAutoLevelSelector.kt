@@ -50,7 +50,8 @@ class ReefAutoLevelSelector {
                 PoseCommands.L4 -> choice.L4.occupied = true
                 PoseCommands.L3 -> choice.L3.occupied = true
                 PoseCommands.L2 -> choice.L2.occupied = true
-                PoseCommands.CoralStation -> TODO("No se puede seleccionar esa posicion para llenar como nivel")
+                PoseCommands.CoralStation -> TODO("No se puede seleccionar coral station como nivel")
+                PoseCommands.Processor -> TODO("No se puede seleccionar processor como nivel")
             }
         }
     }
@@ -66,7 +67,9 @@ class ReefAutoLevelSelector {
                 PoseCommands.L4 -> choice.L4.occupied = false
                 PoseCommands.L3 -> choice.L3.occupied = false
                 PoseCommands.L2 -> choice.L2.occupied = false
-                PoseCommands.CoralStation -> TODO("No se puede seleccionar esa posicion para llenar como nivel")
+                PoseCommands.CoralStation -> TODO("No se puede seleccionar coral station como nivel")
+                PoseCommands.Processor -> TODO("No se puede seleccionar processor como nivel")
+
             }
         }
     }

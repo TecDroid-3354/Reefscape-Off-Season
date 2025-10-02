@@ -36,7 +36,7 @@ class RobotContainer {
     private val controller = CompliantXboxController(driverControllerId)
     private var drive: Drive
     private val stateMachine = StateMachine(States.CoralState)
-    private val arm = ArmSystem(stateMachine, ::limeLightIsAtSetPoint)
+    private val arm = ArmSystem(stateMachine, ::limeLightIsAtSetPoint, controller)
     private val limelightController: LimelightController
     private val pathPlannerAutonomous: PathPlannerAutonomous
     private val swerveRotationLockSystem: SwerveRotationLockSystem
@@ -90,7 +90,7 @@ class RobotContainer {
             { drive.rotation.degrees }, drive.maxSwerveSpeeds.times(0.75))
         limelightController.shuffleboardData()
         arm.publishShuffleBoardData()
-        arm.assignCommands(controller)
+        arm.assignCommands()
 
         swerveRotationLockSystem = SwerveRotationLockSystem(drive, controller)
         pathPlannerAutonomous = PathPlannerAutonomous(drive, limelightController, arm)

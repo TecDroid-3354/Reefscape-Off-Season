@@ -39,7 +39,7 @@ val wristConfig = WristConfig(
     absoluteEncoderPort = NumericId(2),
     absoluteEncoderIsInverted = false,
     absoluteEncoderOffset = (0.1511).rotations,
-    absoluteEncoderBrand = ThroughBoreBrand.REV,
+    absoluteEncoderBrand = ThroughBoreBrand.WCP,
 
     reduction = Reduction(214.285714),
 

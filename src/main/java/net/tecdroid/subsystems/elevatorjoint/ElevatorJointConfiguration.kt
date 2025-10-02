@@ -42,7 +42,7 @@ val elevatorJointConfig = ElevatorJointConfig(
     absoluteEncoderPort = NumericId(0),
     absoluteEncoderIsInverted = true,
     absoluteEncoderOffset = 0.325.rotations - 0.5.degrees,
-    absoluteEncoderBrand = ThroughBoreBrand.REV,
+    absoluteEncoderBrand = ThroughBoreBrand.WCP,
 
     reduction = Reduction(360.0),
 

@@ -49,7 +49,7 @@ val climberConfig = ClimberConfig(
     absoluteEncoderPort = NumericId(0),
     absoluteEncoderIsInverted = false,
     absoluteEncoderOffset = (0.0).rotations,
-    absoluteEncoderBrand = ThroughBoreBrand.WCP,
+    absoluteEncoderBrand = ThroughBoreBrand.REV,
 
     reduction = Reduction(214.285714),
 

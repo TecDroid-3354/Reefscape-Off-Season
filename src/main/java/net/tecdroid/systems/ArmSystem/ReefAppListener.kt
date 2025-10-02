@@ -68,20 +68,20 @@ class ReefAppListener(): SubsystemBase() {
             "L2" -> branchChoice.levelPose = PoseCommands.L2
             "L3" -> branchChoice.levelPose = PoseCommands.L3
             "L4" -> branchChoice.levelPose = PoseCommands.L4
-            //else -> println("Not registered pose")
+            else -> {}//println("Not registered pose")
         }
 
         // Select side
         when (side) {
             "right" -> branchChoice.sideChoice = LimeLightChoice.Right
             "left" -> branchChoice.sideChoice = LimeLightChoice.Left
-            //else -> println("Not registered side")
+            else -> {}//println("Not registered side")
         }
 
         when (action) {
             "fill" -> reefAutoLevelSelector.fillLevel(branchChoice) // Fill level in reef auto level selector
             "empty" -> reefAutoLevelSelector.emptyLevel(branchChoice) // Fill level in reef auto level selector
-            //else -> println("Not registered action")
+            else -> {}//println("Not registered action")
         }
 
 
