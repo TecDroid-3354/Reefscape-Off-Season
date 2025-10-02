@@ -12,20 +12,25 @@ import net.tecdroid.util.RotationalDirection.Counterclockwise
 import net.tecdroid.util.amps
 import net.tecdroid.util.rotations
 import net.tecdroid.util.seconds
+import net.tecdroid.wrappers.ThroughBoreBrand
 
 data class ElevatorJointConfig(
     val leadMotorControllerId: NumericId,
     val followerMotorControllerId: NumericId,
+
     val absoluteEncoderPort: NumericId,
     val absoluteEncoderIsInverted: Boolean,
+    val absoluteEncoderOffset: Angle,
+    val absoluteEncoderBrand: ThroughBoreBrand,
+
     val motorDirection: RotationalDirection,
     val motorCurrentLimit: Current,
+
     val reduction: Reduction,
     val measureLimits: MeasureLimits<AngleUnit>,
     val controlGains: ControlGains,
     val motionTargets: AngularMotionTargets,
     val algaeMotionTargets: AngularMotionTargets,
-    val absoluteEncoderOffset: Angle
 )
 
 val elevatorJointConfig = ElevatorJointConfig(
@@ -37,6 +42,7 @@ val elevatorJointConfig = ElevatorJointConfig(
     absoluteEncoderPort = NumericId(0),
     absoluteEncoderIsInverted = true,
     absoluteEncoderOffset = 0.325.rotations - 0.5.degrees,
+    absoluteEncoderBrand = ThroughBoreBrand.REV,
 
     reduction = Reduction(360.0),
 

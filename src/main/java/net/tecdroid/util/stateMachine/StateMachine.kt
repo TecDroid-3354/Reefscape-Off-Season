@@ -15,7 +15,8 @@ enum class States(var config: StateConfig) {
     CoralState(StateConfig()),
     AlgaeState(StateConfig()),
     ScoreState(StateConfig()),
-    IntakeState(StateConfig());
+    IntakeState(StateConfig()),
+    ClimbState(StateConfig());
 
     /**
      * Change the initial state command. These classes are global, so the config

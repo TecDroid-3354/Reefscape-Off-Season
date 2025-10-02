@@ -70,13 +70,13 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
         // Intake
         registerNamedCommand("EnableIntakeUntilHasCoral",
             Commands.sequence(
-                armSystem.enableIntake(),
+                armSystem.enableCoralIntake(),
                 Commands.waitUntil { armSystem.intake.hasCoral() },
-                armSystem.disableIntake()
+                armSystem.disableCoralIntake()
             ))
 
         registerNamedCommand("EnableIntake",
-            armSystem.enableIntake())
+            armSystem.enableCoralIntake())
 
         // Score commands
 
@@ -89,10 +89,10 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
                 ).withTimeout(2.5),
                 drive.stopCommand(),
 
-                armSystem.enableIntake(),
+                armSystem.enableCoralIntake(),
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
                 Commands.waitTime(0.35.seconds),
-                armSystem.disableIntake())
+                armSystem.disableCoralIntake())
             )
 
         registerNamedCommand("AlignAndScoreLeftBranch",
@@ -105,10 +105,10 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
 
                 drive.stopCommand(),
 
-                armSystem.enableIntake(),
+                armSystem.enableCoralIntake(),
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
                 Commands.waitTime(0.35.seconds),
-                armSystem.disableIntake())
+                armSystem.disableCoralIntake())
             )
 
         registerNamedCommand("AlignAndScoreRightBranchIdFilter",
@@ -124,10 +124,10 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
 
                 Commands.runOnce({limelightController.setFilterIds(arrayOf(21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9));}),
 
-                armSystem.enableIntake(),
+                armSystem.enableCoralIntake(),
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
                 Commands.waitTime(0.35.seconds),
-                armSystem.disableIntake())
+                armSystem.disableCoralIntake())
         )
     }
 
@@ -154,10 +154,10 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
 
                 Commands.runOnce({limelightController.setFilterIds(arrayOf(21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9));}),
 
-                armSystem.enableIntake(),
+                armSystem.enableCoralIntake(),
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
                 Commands.waitTime(0.35.seconds),
-                armSystem.disableIntake(),
+                armSystem.disableCoralIntake(),
                 armSystem.setPoseAutoCommand(ArmPoses.L2.pose, ArmOrders.JEW.order)))
 
         tab.add("Autonomous Chooser", autoChooser.sendableChooser)

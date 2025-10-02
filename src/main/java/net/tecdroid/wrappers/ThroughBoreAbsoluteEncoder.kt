@@ -1,16 +1,44 @@
 package net.tecdroid.wrappers
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration
+import com.ctre.phoenix6.hardware.CANcoder
 import edu.wpi.first.units.Units.Rotations
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.DutyCycleEncoder
 import net.tecdroid.util.NumericId
 import net.tecdroid.util.rotations
 
-class ThroughBoreAbsoluteEncoder(port: NumericId, private val offset: Angle, private val inverted: Boolean) {
-    private val encoder: DutyCycleEncoder = DutyCycleEncoder(port.id)
+/* --------------------------------------------- */
+/* --> ABSOLUTE GENERALIZATION FOR WCP & REV <-- */
+/* --------------------------------------------- */
+enum class ThroughBoreBrand { WCP, REV }
+
+sealed interface ThroughBore { fun getAbsoluteReading() : Angle }
+
+/* For WCP ThroughBore 'By CANcoder'. Is literally a CANcoder */
+private class WCPThroughBore(port: NumericId) : ThroughBore {
+    private val encoder = CANcoder(port.id)
+    override fun getAbsoluteReading(): Angle { return encoder.absolutePosition.value }
+}
+
+/* For REV Throughbore. Is a DutyCycleEncoder */
+private class REVThroughBore(port: NumericId) : ThroughBore {
+    private val encoder = DutyCycleEncoder(port.id)
+    override fun getAbsoluteReading(): Angle { return Rotations.of(encoder.get()) }
+}
+
+/* ---------------------- */
+/* --> Actual Wrapper <-- */
+/* ---------------------- */
+class ThroughBoreAbsoluteEncoder(port: NumericId, private val offset: Angle, private val inverted: Boolean,
+                                 private val brand: ThroughBoreBrand) {
+    private val encoder: ThroughBore = when (brand) {
+        ThroughBoreBrand.WCP -> WCPThroughBore(port)
+        ThroughBoreBrand.REV -> REVThroughBore(port)
+    }
 
     private val reading : Angle
-        get() = Rotations.of(encoder.get())
+        get() = encoder.getAbsoluteReading()
 
     val position: Angle
         get() = (if (inverted) invertReading(reading) else reading) - offset

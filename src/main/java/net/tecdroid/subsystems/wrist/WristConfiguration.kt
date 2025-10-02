@@ -12,6 +12,7 @@ import net.tecdroid.util.rotations
 import net.tecdroid.util.seconds
 import net.tecdroid.safety.MeasureLimits
 import net.tecdroid.util.RotationalDirection.Counterclockwise
+import net.tecdroid.wrappers.ThroughBoreBrand
 
 data class WristConfig(
     val motorControllerId: NumericId,
@@ -21,6 +22,7 @@ data class WristConfig(
     val absoluteEncoderPort: NumericId,
     val absoluteEncoderIsInverted: Boolean,
     val absoluteEncoderOffset: Angle,
+    val absoluteEncoderBrand: ThroughBoreBrand,
 
     val reduction: Reduction,
     val measureLimits: MeasureLimits<AngleUnit>,
@@ -37,6 +39,7 @@ val wristConfig = WristConfig(
     absoluteEncoderPort = NumericId(2),
     absoluteEncoderIsInverted = false,
     absoluteEncoderOffset = (0.1511).rotations,
+    absoluteEncoderBrand = ThroughBoreBrand.REV,
 
     reduction = Reduction(214.285714),
 
