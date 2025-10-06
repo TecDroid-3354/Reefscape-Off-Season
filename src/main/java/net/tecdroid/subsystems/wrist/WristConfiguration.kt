@@ -32,22 +32,22 @@ data class WristConfig(
 )
 
 val wristConfig = WristConfig(
-    motorControllerId = NumericId(61),
+    motorControllerId = NumericId(55),
     motorDirection = Counterclockwise,
-    motorCurrentLimit = 30.0.amps,
+    motorCurrentLimit = 40.0.amps,
 
-    absoluteEncoderPort = NumericId(2),
+    absoluteEncoderPort = NumericId(56),
     absoluteEncoderIsInverted = false,
-    absoluteEncoderOffset = (0.1511).rotations,
+    absoluteEncoderOffset = 0.0302734375.rotations - 10.0.degrees,
     absoluteEncoderBrand = ThroughBoreBrand.WCP,
 
-    reduction = Reduction(214.285714),
+    reduction = Reduction(90.7407),
 
     measureLimits = MeasureLimits(
-        absoluteMinimum = 0.0.rotations,
-        relativeMinimum = 0.021.rotations,
-        relativeMaximum = 0.3704.rotations + 2.0.degrees,
-        absoluteMaximum = 0.3848.rotations,
+        absoluteMinimum = (-65.0).degrees,
+        relativeMinimum = (-50.0).degrees,
+        relativeMaximum = 115.0.degrees,
+        absoluteMaximum = 120.0.degrees,
     ),
 
     controlGains = ControlGains(

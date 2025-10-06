@@ -34,23 +34,23 @@ data class ElevatorJointConfig(
 )
 
 val elevatorJointConfig = ElevatorJointConfig(
-    leadMotorControllerId = NumericId(55),
-    followerMotorControllerId = NumericId(56),
+    leadMotorControllerId = NumericId(52),
+    followerMotorControllerId = NumericId(53),
     motorDirection = Counterclockwise,
     motorCurrentLimit = 40.0.amps,
 
-    absoluteEncoderPort = NumericId(0),
-    absoluteEncoderIsInverted = true,
-    absoluteEncoderOffset = 0.325.rotations - 0.5.degrees,
+    absoluteEncoderPort = NumericId(54),
+    absoluteEncoderIsInverted = false,
+    absoluteEncoderOffset = 0.152587890625.rotations - 57.0.degrees,
     absoluteEncoderBrand = ThroughBoreBrand.WCP,
 
     reduction = Reduction(360.0),
 
     measureLimits = MeasureLimits(
-        absoluteMinimum = 0.011.rotations,
-        relativeMinimum = 0.025.rotations,
-        relativeMaximum = 0.268.rotations + 1.5.degrees,
-        absoluteMaximum = 0.2682.rotations + 1.5.degrees,
+        absoluteMinimum = 0.0.degrees,
+        relativeMinimum = 10.0.degrees,
+        relativeMaximum = 90.0.degrees,
+        absoluteMaximum = 95.0.degrees,
     ),
 
     controlGains = ControlGains(

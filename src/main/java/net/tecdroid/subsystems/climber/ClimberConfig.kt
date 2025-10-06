@@ -11,6 +11,7 @@ import net.tecdroid.util.ControlGains
 import net.tecdroid.util.NumericId
 import net.tecdroid.util.RotationalDirection
 import net.tecdroid.util.RotationalDirection.Counterclockwise
+import net.tecdroid.util.RotationalDirection.Clockwise
 import net.tecdroid.util.amps
 import net.tecdroid.util.degrees
 import net.tecdroid.util.rotations
@@ -38,13 +39,13 @@ data class ClimberConfig(
 )
 
 val climberConfig = ClimberConfig(
-    rollersMotorControllerId = NumericId(0),
-    rollersMotorDirection = Counterclockwise,
+    rollersMotorControllerId = NumericId(60),
+    rollersMotorDirection = Clockwise,
 
-    wristMotorControllerId = NumericId(0),
+    wristMotorControllerId = NumericId(61),
     wristMotorDirection = Counterclockwise,
 
-    motorsCurrentLimit = 0.0.amps,
+    motorsCurrentLimit = 40.0.amps,
 
     absoluteEncoderPort = NumericId(0),
     absoluteEncoderIsInverted = false,

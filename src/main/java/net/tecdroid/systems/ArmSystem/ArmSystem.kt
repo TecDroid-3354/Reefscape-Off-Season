@@ -2,7 +2,6 @@
 
 package net.tecdroid.systems.ArmSystem
 
-import com.ctre.phoenix6.hardware.CANrange
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
@@ -56,52 +55,82 @@ enum class ArmPoses(var pose: ArmPose) {
     )
     ),
 
-    L1(
+    FrontL1(
         ArmPose(
-            wristPosition           = 0.3528.rotations - 55.0.degrees,
-            elevatorDisplacement    = 0.01.meters,
-            elevatorJointPosition   = 0.263.rotations,
+            wristPosition           = 55.0.degrees,
+            elevatorDisplacement    = 0.75.inches,
+            elevatorJointPosition   = 40.0.degrees,
             targetCoralVoltage      = 3.5.volts,
             targetAlgaeVoltage      = 0.0.volts
     )
     ),
 
-    L2(
+    FrontL2(
         ArmPose(
-            wristPosition           = 0.3528.rotations,
-            elevatorDisplacement    = 0.0367.meters + 0.0125.meters,
-            elevatorJointPosition   = 0.263.rotations,
-            targetCoralVoltage      = 8.0.volts,
+            wristPosition           = 180.0.degrees,
+            elevatorDisplacement    = 2.5.inches,
+            elevatorJointPosition   = 50.0.degrees,
+            targetCoralVoltage      = 5.0.volts,
+            targetAlgaeVoltage      = 0.0.volts
+        )
+    ),
+
+    FrontL3(
+        ArmPose(
+            wristPosition           = 170.0.degrees,
+            elevatorDisplacement    = 14.5.inches,
+            elevatorJointPosition   = 62.5.degrees,
+            targetCoralVoltage      = 5.0.volts,
+            targetAlgaeVoltage      = 0.0.volts
+        )
+    ),
+
+    FrontL4(
+        ArmPose(
+            wristPosition           = 140.0.degrees,
+            elevatorDisplacement    = 40.0.inches,
+            elevatorJointPosition   = 75.0.degrees,
+            targetCoralVoltage      = 5.0.volts,
+            targetAlgaeVoltage      = 0.0.volts
+        )
+    ),
+
+    BackL2(
+        ArmPose(
+            wristPosition           = 220.0.degrees, // TODO("Check the limits of the wrist")
+            elevatorDisplacement    = 0.75.inches,
+            elevatorJointPosition   = 95.0.degrees, // TODO("Check the limits of the joint")
+            targetCoralVoltage      = 5.0.volts,
             targetAlgaeVoltage      = 0.0.volts
     )
     ),
 
-    L3(
+    BackL3(
         ArmPose(
-            wristPosition           = 0.3528.rotations - 0.5.degrees,
-            elevatorDisplacement    = 0.4281.meters,
-            elevatorJointPosition   = 0.263.rotations, //elevatorJointPosition = 0.25.rotations + 3.5.degrees,
-            targetCoralVoltage      = 8.0.volts,
+            wristPosition           = 200.0.degrees,
+            elevatorDisplacement    = 10.0.inches,
+            elevatorJointPosition   = 90.0.degrees,
+            targetCoralVoltage      = 5.0.volts,
             targetAlgaeVoltage      = 0.0.volts
     )
     ),
 
-    L4(
+    BackL4(
         ArmPose(
-            wristPosition           = 0.3528.rotations,
-            elevatorDisplacement    = 1.0283.meters,
-            elevatorJointPosition   = 0.263.rotations, //0.25.rotations + 3.5.degrees,
-            targetCoralVoltage      = 8.0.volts,
+            wristPosition           = 220.0.degrees,
+            elevatorDisplacement    = 39.0.inches,
+            elevatorJointPosition   = 90.0.degrees,
+            targetCoralVoltage      = 5.0.volts,
             targetAlgaeVoltage      = 0.0.volts
     )
     ),
 
     CoralStation(
         ArmPose(
-            wristPosition           = 0.3601.rotations + 2.5.degrees,
-            elevatorDisplacement    = 0.01.meters,
-            elevatorJointPosition   = 0.1622.rotations + 10.5.degrees,
-            targetCoralVoltage      = 9.0.volts,
+            wristPosition           = (125 - 67.5).degrees,
+            elevatorDisplacement    = 8.0.inches,
+            elevatorJointPosition   = 67.5.degrees,
+            targetCoralVoltage      = 5.0.volts,
             targetAlgaeVoltage      = 0.0.volts
     )
     ),
@@ -112,7 +141,7 @@ enum class ArmPoses(var pose: ArmPose) {
             elevatorDisplacement    = 0.1457.meters,
             elevatorJointPosition   = 0.1772.rotations - 1.5.degrees,
             targetCoralVoltage      = 0.0.volts,
-            targetAlgaeVoltage      = 12.0.volts
+            targetAlgaeVoltage      = 5.0.volts
     )
     ),
 
@@ -122,7 +151,7 @@ enum class ArmPoses(var pose: ArmPose) {
             elevatorDisplacement    = 0.4920.meters,
             elevatorJointPosition   = 0.1968.rotations - 1.5.degrees,
             targetCoralVoltage      = 0.0.volts,
-            targetAlgaeVoltage      = 12.0.volts
+            targetAlgaeVoltage      = 5.0.volts
     )
     ),
 
@@ -132,26 +161,26 @@ enum class ArmPoses(var pose: ArmPose) {
             elevatorDisplacement    = 0.0150.meters,
             elevatorJointPosition   = 0.0415.rotations + 5.0.degrees,
             targetCoralVoltage      = 0.0.volts,
-            targetAlgaeVoltage      = 8.0.volts
+            targetAlgaeVoltage      = 5.0.volts
     )
     ),
 
     AlgaeFloorIntake(
         ArmPose(
-            wristPosition           = 0.3705.rotations - 24.0.degrees,
-            elevatorDisplacement    = 0.0150.meters,
-            elevatorJointPosition   = 0.0415.rotations,
+            wristPosition           = 75.0.degrees,
+            elevatorDisplacement    = 1.0.inches,
+            elevatorJointPosition   = 10.0.degrees,
             targetCoralVoltage      = 0.0.volts,
-            targetAlgaeVoltage      = 8.0.volts
+            targetAlgaeVoltage      = 5.0.volts
     )
     ),
 
-    coralFloorIntake(
+    CoralFloorIntake(
         ArmPose(
-            wristPosition           = 0.358.rotations - 0.5.degrees,
-            elevatorDisplacement    = 0.01.meters,
-            elevatorJointPosition   = 0.0153.rotations,
-            targetCoralVoltage      = 9.0.volts,
+            wristPosition           = 90.0.degrees,
+            elevatorDisplacement    = 0.75.inches,
+            elevatorJointPosition   = 0.0.degrees,
+            targetCoralVoltage      = 5.0.volts,
             targetAlgaeVoltage      = 0.0.volts
     )
     ),
@@ -177,9 +206,9 @@ enum class ArmOrders(val order: ArmOrder) {
 }
 
 enum class PoseCommands(val pose: ArmPose, val order: ArmOrder) {
-    L4(ArmPoses.L4.pose, ArmOrders.JEW.order),
-    L3(ArmPoses.L3.pose, ArmOrders.JEW.order),
-    L2(ArmPoses.L2.pose, ArmOrders.EJW.order),
+    L4(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
+    L3(ArmPoses.BackL3.pose, ArmOrders.JEW.order),
+    L2(ArmPoses.BackL2.pose, ArmOrders.EJW.order),
     CoralStation(ArmPoses.CoralStation.pose, ArmOrders.EJW.order),
     Processor(ArmPoses.Processor.pose, ArmOrders.EJW.order)
 }
@@ -189,7 +218,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
     val elevator = Elevator()
     val joint = ElevatorJoint()
     val climber = Climber()
-    val intake = Intake(listOf(CANrange(0), CANrange(0), CANrange(0), CANrange(0)))
+    val intake = Intake()
 
     private var coralTargetVoltage = 0.0.volts
     private var algaeTargetVoltage = 0.0.volts
@@ -239,7 +268,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
             Commands.runOnce({
                 coralTargetVoltage = pose.targetCoralVoltage
                 isScoring = when (pose) {
-                    ArmPoses.L2.pose, ArmPoses.L3.pose, ArmPoses.L4.pose -> true
+                    ArmPoses.BackL2.pose, ArmPoses.BackL3.pose, ArmPoses.BackL4.pose -> true
                     else -> false
                 }
             }),
@@ -253,7 +282,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
             Commands.runOnce({
                 coralTargetVoltage = pose.targetCoralVoltage
                 isScoring = when (pose) {
-                    ArmPoses.L2.pose, ArmPoses.L3.pose, ArmPoses.L4.pose -> true
+                    ArmPoses.BackL2.pose, ArmPoses.BackL3.pose, ArmPoses.BackL4.pose -> true
                     else -> false
                 }
             }),
@@ -351,6 +380,24 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
         // Change to coral state if we are in score state, and we just pull out a coral
         stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !getSensorRead() }, States.CoralState, Phase.Teleop)
 
+    }
+
+    fun setAllCoast(): Command {
+        return SequentialCommandGroup(
+            wrist.coast(),
+            elevator.coast(),
+            joint.coast(),
+            climber.coast(),
+        ).ignoringDisable(true)
+    }
+
+    fun setAllBrake(): Command {
+        return SequentialCommandGroup(
+            wrist.brake(),
+            elevator.brake(),
+            joint.brake(),
+            climber.brake(),
+        ).ignoringDisable(true)
     }
 
     fun assignCommands() {
@@ -489,7 +536,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
         // POV up
         controller.povUp().onTrue(
             Commands.sequence(
-                setPoseCommand(ArmPoses.coralFloorIntake.pose, ArmOrders.EWJ.order)
+                setPoseCommand(ArmPoses.CoralFloorIntake.pose, ArmOrders.EWJ.order)
             )
         )
 

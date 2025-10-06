@@ -459,7 +459,7 @@ class LimelightAprilTagDetector(config: LimelightConfig): Limelight(config) {
             setDoubleArray(LimelightTableKeys.Set.robotOrientation, orientationToRawData(value.first, value.second))
         }
 
-
+    fun setThrottle(value: Int) { setNumber(LimelightTableKeys.Set.throttle, value) }
 }
 
 /**

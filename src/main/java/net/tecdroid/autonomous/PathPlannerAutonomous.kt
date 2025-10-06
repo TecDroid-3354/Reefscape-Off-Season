@@ -53,19 +53,19 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
             armSystem.setPoseAutoCommand(ArmPoses.CoralStation.pose, ArmOrders.EJW.order))
 
         registerNamedCommand("ArmL4Pose",
-            armSystem.setPoseAutoCommand(ArmPoses.L4.pose, ArmOrders.JEW.order))
+            armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order))
 
         registerNamedCommand("ArmL3PoseWJE",
-        armSystem.setPoseAutoCommand(ArmPoses.L3.pose, ArmOrders.WEJ.order))
+        armSystem.setPoseAutoCommand(ArmPoses.BackL3.pose, ArmOrders.WEJ.order))
 
         registerNamedCommand("ArmL3PoseEWJ",
-            armSystem.setPoseAutoCommand(ArmPoses.L3.pose, ArmOrders.EWJ.order))
+            armSystem.setPoseAutoCommand(ArmPoses.BackL3.pose, ArmOrders.EWJ.order))
 
         registerNamedCommand("ArmL2PoseWJE",
-            armSystem.setPoseAutoCommand(ArmPoses.L2.pose, ArmOrders.WJE.order))
+            armSystem.setPoseAutoCommand(ArmPoses.BackL2.pose, ArmOrders.WJE.order))
 
         registerNamedCommand("ArmL2PoseJEW",
-            armSystem.setPoseAutoCommand(ArmPoses.L2.pose, ArmOrders.JEW.order))
+            armSystem.setPoseAutoCommand(ArmPoses.BackL2.pose, ArmOrders.JEW.order))
 
         // Intake
         registerNamedCommand("EnableIntakeUntilHasCoral",
@@ -85,7 +85,7 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
                 ParallelCommandGroup(
                     limelightController.alignRobotAllAxis(LimeLightChoice.Right, 0.215, 0.035)
                         .until { limelightController.isAtSetPoint(LimeLightChoice.Right, 0.215, 0.035) },
-                    armSystem.setPoseAutoCommand(ArmPoses.L4.pose, ArmOrders.JEW.order),
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
                 drive.stopCommand(),
 
@@ -100,7 +100,7 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
                 ParallelCommandGroup(
                     limelightController.alignRobotAllAxis(LimeLightChoice.Left, 0.215, -0.035)
                         .until { limelightController.isAtSetPoint(LimeLightChoice.Left, 0.215, -0.035) },
-                    armSystem.setPoseAutoCommand(ArmPoses.L4.pose, ArmOrders.JEW.order),
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
 
                 drive.stopCommand(),
@@ -117,7 +117,7 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
                 ParallelCommandGroup(
                     limelightController.alignRobotAllAxis(LimeLightChoice.Right, 0.215, -0.035)
                         .until { limelightController.isAtSetPoint(LimeLightChoice.Right, 0.215, -0.035) },
-                    armSystem.setPoseAutoCommand(ArmPoses.L4.pose, ArmOrders.JEW.order),
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
 
                 drive.stopCommand(),
@@ -148,7 +148,7 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
                 ParallelCommandGroup(
                     limelightController.alignRobotAllAxis(LimeLightChoice.Right, 0.215, 0.035)
                         .until { limelightController.isAtSetPoint(LimeLightChoice.Right, 0.215, 0.035) },
-                    armSystem.setPoseAutoCommand(ArmPoses.L4.pose, ArmOrders.JEW.order),
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
                 drive.stopCommand(),
 
@@ -158,7 +158,7 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
                 Commands.waitTime(0.35.seconds),
                 armSystem.disableCoralIntake(),
-                armSystem.setPoseAutoCommand(ArmPoses.L2.pose, ArmOrders.JEW.order)))
+                armSystem.setPoseAutoCommand(ArmPoses.BackL2.pose, ArmOrders.JEW.order)))
 
         tab.add("Autonomous Chooser", autoChooser.sendableChooser)
         SmartDashboard.putData("Autonomous Chooser", autoChooser.sendableChooser)

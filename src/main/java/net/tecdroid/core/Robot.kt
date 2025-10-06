@@ -86,6 +86,7 @@ class Robot : LoggedRobot {
 
     override fun disabledInit() {
         CommandScheduler.getInstance().cancelAll()
+        container.disableInit()
     }
 
     override fun disabledPeriodic() {

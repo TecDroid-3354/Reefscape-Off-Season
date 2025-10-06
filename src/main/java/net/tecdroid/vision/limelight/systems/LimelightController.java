@@ -95,6 +95,11 @@ public class LimelightController {
 
     }
 
+    public void setThrottle(int throttle) {
+        leftLimelight.setThrottle(throttle);
+        rightLimelight.setThrottle(throttle);
+    }
+
     public void limelightsStream() {
         ShuffleboardTab driverTab = Shuffleboard.getTab("Driver Tab");
 

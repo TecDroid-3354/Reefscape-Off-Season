@@ -28,8 +28,8 @@ data class ElevatorConfig(
 )
 
 val elevatorConfig = ElevatorConfig(
-    leadMotorControllerId = NumericId(53),
-    followerMotorId = NumericId(54),
+    leadMotorControllerId = NumericId(50),
+    followerMotorId = NumericId(51),
     motorDirection = Clockwise,
     motorCurrentLimit = 40.0.amps,
 

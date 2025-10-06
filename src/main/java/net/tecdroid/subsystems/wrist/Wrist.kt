@@ -6,6 +6,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.NeutralModeValue
+import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.Rotations
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
@@ -139,8 +140,8 @@ class Wrist :
 
     override fun initSendable(builder: SendableBuilder) {
         with(builder) {
-            addDoubleProperty("Current Angle (Rotations)", { angle.`in`(Rotations) }, {})
-            addDoubleProperty("Current Absolute Angle (Rotations)", { absoluteAngle.`in`(Rotations) }, {})
+            addDoubleProperty("Current Angle (Degrees)", { angle.`in`(Degrees) }, {})
+            addDoubleProperty("Current Absolute Angle (Degrees)", { absoluteAngle.`in`(Degrees) }, {})
         }
     }
 
