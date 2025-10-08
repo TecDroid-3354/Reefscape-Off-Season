@@ -144,7 +144,7 @@ class ElevatorJoint:
         leadMotorController.configurator.apply(talonConfig)
         followerMotorController.configurator.apply(talonConfig)
 
-        followerMotorController.setControl(Follower(leadMotorController.deviceID, false))
+        followerMotorController.setControl(Follower(leadMotorController.deviceID, true))
     }
 
     override fun initSendable(builder: SendableBuilder) {

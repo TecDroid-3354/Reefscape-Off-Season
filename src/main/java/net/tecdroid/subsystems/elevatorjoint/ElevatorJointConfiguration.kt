@@ -41,16 +41,16 @@ val elevatorJointConfig = ElevatorJointConfig(
 
     absoluteEncoderPort = NumericId(54),
     absoluteEncoderIsInverted = false,
-    absoluteEncoderOffset = 0.152587890625.rotations - 57.0.degrees,
+    absoluteEncoderOffset = 0.161376953125.rotations - 58.1.degrees,
     absoluteEncoderBrand = ThroughBoreBrand.WCP,
 
     reduction = Reduction(360.0),
 
     measureLimits = MeasureLimits(
         absoluteMinimum = 0.0.degrees,
-        relativeMinimum = 10.0.degrees,
-        relativeMaximum = 90.0.degrees,
-        absoluteMaximum = 95.0.degrees,
+        relativeMinimum = 0.05.degrees,
+        relativeMaximum = 95.0.degrees,
+        absoluteMaximum = 96.0.degrees,
     ),
 
     controlGains = ControlGains(
@@ -64,7 +64,7 @@ val elevatorJointConfig = ElevatorJointConfig(
     motionTargets = AngularMotionTargets(
         cruiseVelocity = 0.277.rotations.per(Second),
         accelerationTimePeriod = 0.25.seconds,
-        jerkTimePeriod = 0.1.seconds
+        jerkTimePeriod = 0.5.seconds
     ),
 
     algaeMotionTargets = AngularMotionTargets(

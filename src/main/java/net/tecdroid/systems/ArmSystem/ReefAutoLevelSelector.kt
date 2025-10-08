@@ -1,12 +1,11 @@
 package net.tecdroid.systems.ArmSystem
 
-import net.tecdroid.util.NumericId
 import net.tecdroid.vision.limelight.systems.LimeLightChoice
 
 data class Level(val poseCommand: PoseCommands, var occupied: Boolean = false)
 
-data class Branch(val L2: Level = Level(PoseCommands.L2), val L3: Level = Level(PoseCommands.L3),
-                  val L4: Level = Level(PoseCommands.L4))
+data class Branch(val L2: Level = Level(PoseCommands.BackL2), val L3: Level = Level(PoseCommands.BackL3),
+                  val L4: Level = Level(PoseCommands.BackL4))
 
 data class Side(val leftBranch: Branch = Branch(), val rightBranch: Branch = Branch())
 
@@ -47,11 +46,12 @@ class ReefAutoLevelSelector {
             }
 
             when (branchChoice.levelPose) {
-                PoseCommands.L4 -> choice.L4.occupied = true
-                PoseCommands.L3 -> choice.L3.occupied = true
-                PoseCommands.L2 -> choice.L2.occupied = true
+                PoseCommands.BackL4 -> choice.L4.occupied = true
+                PoseCommands.BackL3 -> choice.L3.occupied = true
+                PoseCommands.BackL2 -> choice.L2.occupied = true
                 PoseCommands.CoralStation -> TODO("No se puede seleccionar coral station como nivel")
                 PoseCommands.Processor -> TODO("No se puede seleccionar processor como nivel")
+                PoseCommands.Passive -> TODO()
             }
         }
     }
@@ -64,12 +64,12 @@ class ReefAutoLevelSelector {
             }
 
             when (branchChoice.levelPose) {
-                PoseCommands.L4 -> choice.L4.occupied = false
-                PoseCommands.L3 -> choice.L3.occupied = false
-                PoseCommands.L2 -> choice.L2.occupied = false
+                PoseCommands.BackL4 -> choice.L4.occupied = false
+                PoseCommands.BackL3 -> choice.L3.occupied = false
+                PoseCommands.BackL2 -> choice.L2.occupied = false
                 PoseCommands.CoralStation -> TODO("No se puede seleccionar coral station como nivel")
                 PoseCommands.Processor -> TODO("No se puede seleccionar processor como nivel")
-
+                PoseCommands.Passive -> TODO()
             }
         }
     }

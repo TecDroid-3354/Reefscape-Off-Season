@@ -38,7 +38,7 @@ val elevatorConfig = ElevatorConfig(
 
     measureLimits = MeasureLimits(
         absoluteMinimum = 0.0.meters,
-        relativeMinimum = 0.0125.meters,
+        relativeMinimum = 0.001.meters,
         relativeMaximum = 1.040.meters,
         absoluteMaximum = 1.042.meters,
     ),

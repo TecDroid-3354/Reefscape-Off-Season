@@ -72,7 +72,7 @@ class Climber :
         val request = MotionMagicVoltage(transformedAngle).withSlot(0)
 
         target = transformedAngle
-        wristController.setControl(request)
+        //wristController.setControl(request)
     }
 
     /**
@@ -92,10 +92,10 @@ class Climber :
     override fun setVoltage(voltage: Voltage) {
         if (angle < config.measureLimits.relativeMaximum && angle > config.measureLimits.relativeMinimum) {
             val request = VoltageOut(voltage)
-            wristController.setControl(request)
+            //wristController.setControl(request)
         } else {
             val request = VoltageOut(0.0)
-            wristController.setControl(request)
+            //wristController.setControl(request)
         }
     }
 

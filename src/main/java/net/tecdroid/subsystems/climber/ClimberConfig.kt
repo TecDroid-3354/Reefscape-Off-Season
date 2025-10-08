@@ -52,7 +52,7 @@ val climberConfig = ClimberConfig(
     absoluteEncoderOffset = (0.0).rotations,
     absoluteEncoderBrand = ThroughBoreBrand.REV,
 
-    reduction = Reduction(214.285714),
+    reduction = Reduction(5.0 * 5.0 * 5.0),
 
     measureLimits = MeasureLimits(
         absoluteMinimum = 0.0.rotations,

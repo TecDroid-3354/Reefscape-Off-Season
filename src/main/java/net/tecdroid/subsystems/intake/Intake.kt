@@ -35,6 +35,8 @@ class Intake() : TdSubsystem("Intake") {
     private val coralRightMotorController = TalonFX(config.coralRightMotorControllerId.id)
     private val coralLeftMotorController = TalonFX(config.coralLeftMotorControllerId.id)
 
+
+    private val isHorizontallyDetected = Trigger { isHorizontallyDetected() }
     private val hasCoralTrigger = Trigger { hasCoral() }
     private val intakingCoralTrigger = Trigger { intakingCoral() } // 1st - 3rd CANRange, before fully inside
     private val hasAlgaeTrigger = Trigger {
@@ -57,7 +59,11 @@ class Intake() : TdSubsystem("Intake") {
         configureMotorInterface()
         configureCanRangesInterface()
 
-        intakingCoralTrigger.and { DriverStation.isTeleop() }.and { hasCoralTrigger.asBoolean.not() }
+
+        isHorizontallyDetected.and { DriverStation.isTeleop() }
+            .onTrue(InstantCommand({ horizontalIntake(Pair(5.0.volts, 8.0.volts)) }))
+
+        intakingCoralTrigger.and { DriverStation.isTeleop() }.and { hasCoralTrigger.asBoolean.not() }.and { isHorizontallyDetected().not() }
             .onTrue(InstantCommand({ setCoralVoltage(calculateCoralVoltage(5.0.volts)) }))
 
         hasCoralTrigger.and { DriverStation.isTeleop() }
@@ -116,6 +122,12 @@ class Intake() : TdSubsystem("Intake") {
         return Pair(leftVoltage, rightVoltage)
     }
 
+    private fun horizontalIntake(voltage: Pair<Voltage, Voltage>) {
+        coralRightMotorController.setControl(VoltageOut(voltage.first))
+        coralLeftMotorController.setControl(VoltageOut(voltage.second))
+        algaeMotorController.setControl(VoltageOut(voltage.first.`in`(Volts).coerceAtLeast(voltage.second.`in`(Volts))))
+    }
+
 
     /**
      * Sets voltage to the ALGAE rollers' motor.
@@ -148,6 +160,13 @@ class Intake() : TdSubsystem("Intake") {
 
     /** Checks the inner CANRange, as it's the one that detects the coral when fully inside intake */
     fun hasCoral(): Boolean = config.intakeInnerCanRange.isDetected.value
+
+    fun isHorizontallyDetected(): Boolean {
+        for (sensor in listOf<CANrange>(config.intakeLeftCanRange, config.intakeCenterCanRange, config.intakeRightCanRange)) {
+            if (sensor.isDetected.value.not()) return false
+        }
+        return true
+    }
     /**
      * Configures motors for both Coral & Algae Rollers independently.
      */
@@ -185,6 +204,7 @@ class Intake() : TdSubsystem("Intake") {
                 .withProximityHysteresis(0.2.inches)
 
             ToFParams.withUpdateMode(UpdateModeValue.ShortRange100Hz)
+
         }
 
         for (sensor in listOf<CANrange>(

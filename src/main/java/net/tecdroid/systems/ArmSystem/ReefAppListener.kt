@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.DriverStation.Alliance
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import net.tecdroid.util.NumericId
 import net.tecdroid.vision.limelight.systems.LimeLightChoice
 
 data class BranchChoice (
@@ -21,7 +20,7 @@ class ReefAppListener(): SubsystemBase() {
     private val table = NetworkTableInstance.getDefault().getTable("ReefAppData")
 
     // Branch choice object
-    val branchChoice = BranchChoice(0, PoseCommands.L2, LimeLightChoice.Right)
+    val branchChoice = BranchChoice(0, PoseCommands.BackL2, LimeLightChoice.Right)
 
     private fun shuffleboardData() {
         val tab = Shuffleboard.getTab("Driver Tab")
@@ -65,9 +64,9 @@ class ReefAppListener(): SubsystemBase() {
 
         // Select level
         when (level) {
-            "L2" -> branchChoice.levelPose = PoseCommands.L2
-            "L3" -> branchChoice.levelPose = PoseCommands.L3
-            "L4" -> branchChoice.levelPose = PoseCommands.L4
+            "L2" -> branchChoice.levelPose = PoseCommands.BackL2
+            "L3" -> branchChoice.levelPose = PoseCommands.BackL3
+            "L4" -> branchChoice.levelPose = PoseCommands.BackL4
             else -> {}//println("Not registered pose")
         }
 

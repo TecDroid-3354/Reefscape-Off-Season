@@ -14,7 +14,9 @@ import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.SendableBuilder
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import net.tecdroid.subsystems.util.generic.*
+import net.tecdroid.subsystems.util.identification.GenericSysIdRoutine
 import net.tecdroid.wrappers.ThroughBoreAbsoluteEncoder
 
 class Wrist :
@@ -35,6 +37,8 @@ class Wrist :
 
     override val forwardsRunningCondition  = { angle < config.measureLimits.relativeMaximum }
     override val backwardsRunningCondition = { angle > config.measureLimits.relativeMinimum }
+
+    val sysId = createIdentificationRoutine()
 
     init {
         configureMotorInterface()
@@ -72,6 +76,20 @@ class Wrist :
         } else {
             val request = MotionMagicVoltage(transformedAngle).withSlot(0)
             motorController.setControl(request)
+        }
+    }
+
+    fun sysIdDynamic(direction: SysIdRoutine.Direction): Command {
+        return when (direction) {
+            SysIdRoutine.Direction.kForward -> sysId.createTests().dynamicForward
+            SysIdRoutine.Direction.kReverse -> sysId.createTests().dynamicBackward
+        }
+    }
+
+    fun sysIdQuasistatic(direction: SysIdRoutine.Direction): Command {
+        return when (direction) {
+            SysIdRoutine.Direction.kForward -> sysId.createTests().quasistaticForward
+            SysIdRoutine.Direction.kReverse -> sysId.createTests().quasistaticBackward
         }
     }
 

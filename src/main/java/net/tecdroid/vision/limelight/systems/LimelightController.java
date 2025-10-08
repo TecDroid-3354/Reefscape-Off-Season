@@ -238,7 +238,7 @@ public class LimelightController {
             double targetAngleDegrees = alignmentAngles.get(id);
 
             double xFactor = clamp(1.0, -1.0, xPIDController.calculate(robotPose.getTranslation().getZ(), xSetPoint));
-            double yFactor = -clamp(1.0, -1.0, yPIDController.calculate(robotPose.getTranslation().getX(), ySetPoint));
+            double yFactor = clamp(1.0, -1.0, yPIDController.calculate(robotPose.getTranslation().getX(), ySetPoint));
             double wFactor = clamp(1.0, -1.0, thetaPIDController.calculate(getLimitedYaw(), targetAngleDegrees));
 
             LinearVelocity xVelocity = MetersPerSecond.of(maxSpeeds.vxMetersPerSecond * xFactor);
@@ -268,7 +268,7 @@ public class LimelightController {
             double targetAngleDegrees = alignmentAngles.get(id);
 
             double xFactor = clamp(1.0, -1.0, xPIDController.calculate(robotPose.getTranslation().getZ(), xSetPoint));
-            double yFactor = -clamp(1.0, -1.0, yPIDController.calculate(robotPose.getTranslation().getX(), ySetPoint));
+            double yFactor = clamp(1.0, -1.0, yPIDController.calculate(robotPose.getTranslation().getX(), ySetPoint));
             double wFactor = clamp(1.0, -1.0, thetaPIDController.calculate(getLimitedYaw(), targetAngleDegrees));
 
             LinearVelocity xVelocity = MetersPerSecond.of(maxSpeeds.vxMetersPerSecond * xFactor);
