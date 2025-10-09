@@ -5,3 +5,4 @@ const val integratorTabName = "Integrators"
 
 const val rightLimelightName = "limelight-right"
 const val leftLimelightName = "limelight-left"
+const val frontLimelightName = "limelight-front"

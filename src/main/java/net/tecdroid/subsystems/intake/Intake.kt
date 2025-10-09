@@ -61,10 +61,10 @@ class Intake() : TdSubsystem("Intake") {
 
 
         isHorizontallyDetected.and { DriverStation.isTeleop() }
-            .onTrue(InstantCommand({ horizontalIntake(Pair(5.0.volts, 8.0.volts)) }))
+            .onTrue(InstantCommand({ horizontalIntake(Pair(6.0.volts, 11.0.volts)) }))
 
         intakingCoralTrigger.and { DriverStation.isTeleop() }.and { hasCoralTrigger.asBoolean.not() }.and { isHorizontallyDetected().not() }
-            .onTrue(InstantCommand({ setCoralVoltage(calculateCoralVoltage(5.0.volts)) }))
+            .onTrue(InstantCommand({ setCoralVoltage(calculateCoralVoltage(6.0.volts)) }))
 
         hasCoralTrigger.and { DriverStation.isTeleop() }
             .onTrue(InstantCommand({ setCoralVoltage(0.0.volts) }))
@@ -106,15 +106,15 @@ class Intake() : TdSubsystem("Intake") {
     }
 
     /** This function is necessary for the coral to enter the intake smoothly and not get stuck.
-     * When the left CANRange detects the coral we perform leftVoltage += 3.0.volts.
-     * When the right CANRange detects the coral we perform rightVoltage += 3.0.volts
+     * When the left CANRange detects the coral we perform leftVoltage += 5.0.volts.
+     * When the right CANRange detects the coral we perform rightVoltage += 5.0.volts
      * @return A [Pair] in the following order: coralLeftMotorVoltage, coralRightMotorVoltage.*/
     fun calculateCoralVoltage(baseVoltage: Voltage) : Pair<Voltage, Voltage> {
         var leftVoltage = baseVoltage
         var rightVoltage = baseVoltage
 
-        if (config.intakeLeftCanRange.isDetected.value) rightVoltage += 3.0.volts
-        else if (config.intakeRightCanRange.isDetected.value) leftVoltage += 3.0.volts
+        if (config.intakeLeftCanRange.isDetected.value) rightVoltage += 5.0.volts
+        else if (config.intakeRightCanRange.isDetected.value) leftVoltage += 5.0.volts
 
         SmartDashboard.putNumber("LeftVoltage: ", leftVoltage.`in`(Volts))
         SmartDashboard.putNumber("RightVoltage: ", rightVoltage.`in`(Volts))
