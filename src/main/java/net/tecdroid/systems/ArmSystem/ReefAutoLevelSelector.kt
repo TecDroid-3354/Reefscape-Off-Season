@@ -30,6 +30,7 @@ class ReefAutoLevelSelector {
             val choice = when (limeLightChoice) {
                 LimeLightChoice.Left -> side.leftBranch
                 LimeLightChoice.Right -> side.rightBranch
+                LimeLightChoice.Front -> side.rightBranch // TODO() = Front logic to choose branch
             }
 
             listOf(choice.L4, choice.L3, choice.L2)
@@ -43,6 +44,8 @@ class ReefAutoLevelSelector {
             val choice = when (branchChoice.sideChoice) {
                 LimeLightChoice.Left -> side.leftBranch
                 LimeLightChoice.Right -> side.rightBranch
+                LimeLightChoice.Front -> side.rightBranch // TODO() = Front logic to choose branch
+
             }
 
             when (branchChoice.levelPose) {
@@ -61,15 +64,16 @@ class ReefAutoLevelSelector {
             val choice = when (branchChoice.sideChoice) {
                 LimeLightChoice.Left -> side.leftBranch
                 LimeLightChoice.Right -> side.rightBranch
+                LimeLightChoice.Front -> side.rightBranch // TODO () = Front logic to choose branch
             }
 
             when (branchChoice.levelPose) {
                 PoseCommands.BackL4 -> choice.L4.occupied = false
                 PoseCommands.BackL3 -> choice.L3.occupied = false
                 PoseCommands.BackL2 -> choice.L2.occupied = false
-                PoseCommands.CoralStation -> TODO("No se puede seleccionar coral station como nivel")
-                PoseCommands.Processor -> TODO("No se puede seleccionar processor como nivel")
-                PoseCommands.Passive -> TODO()
+                PoseCommands.CoralStation -> println("------------ Chosen pose is not a level ------------")
+                PoseCommands.Processor -> println("------------ Chosen pose is not a level ------------")
+                PoseCommands.Passive -> println("------------ Chosen pose is not a level ------------")
             }
         }
     }

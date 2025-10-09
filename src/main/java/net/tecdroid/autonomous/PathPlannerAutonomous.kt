@@ -22,7 +22,7 @@ import net.tecdroid.vision.limelight.systems.LimelightController
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import java.io.IOException
 
-class PathPlannerAutonomous(val drive: Drive, private val limelightController: LimelightController, private val armSystem: ArmSystem) {
+class PathPlannerAutonomous(val drive: Drive, private val llController: LimelightController, private val armSystem: ArmSystem) {
     private val autoChooser = LoggedDashboardChooser<Command>("Auto Choices", drive.autoChooser)
 
     private val robotConfig: RobotConfig = try {
@@ -83,8 +83,10 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
         registerNamedCommand("AlignAndScoreRightBranch",
             Commands.sequence(
                 ParallelCommandGroup(
-                    limelightController.alignRobotAllAxis(LimeLightChoice.Right, 0.215, 0.035)
-                        .until { limelightController.isAtSetPoint(LimeLightChoice.Right, 0.215, 0.035) },
+                    llController.alignRobotAllAxis(LimeLightChoice.Right, llController.getRightLLSetpoints(
+                        LimeLightChoice.Right))
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(
+                            LimeLightChoice.Right)) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
                 drive.stopCommand(),
@@ -98,8 +100,8 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
         registerNamedCommand("AlignAndScoreLeftBranch",
             Commands.sequence(
                 ParallelCommandGroup(
-                    limelightController.alignRobotAllAxis(LimeLightChoice.Left, 0.215, -0.035)
-                        .until { limelightController.isAtSetPoint(LimeLightChoice.Left, 0.215, -0.035) },
+                    llController.alignRobotAllAxis(LimeLightChoice.Left, llController.getLeftLLSetpoints(LimeLightChoice.Left))
+                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getLeftLLSetpoints(LimeLightChoice.Left)) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
 
@@ -113,16 +115,16 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
 
         registerNamedCommand("AlignAndScoreRightBranchIdFilter",
             Commands.sequence(
-                Commands.runOnce({limelightController.setFilterIds(arrayOf(20, 19, 11, 6));}),
+                Commands.runOnce({llController.setFilterIds(arrayOf(20, 19, 11, 6));}),
                 ParallelCommandGroup(
-                    limelightController.alignRobotAllAxis(LimeLightChoice.Right, 0.215, -0.035)
-                        .until { limelightController.isAtSetPoint(LimeLightChoice.Right, 0.215, -0.035) },
+                    llController.alignRobotAllAxis(LimeLightChoice.Right, llController.getRightLLSetpoints(LimeLightChoice.Right))
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(LimeLightChoice.Right)) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
 
                 drive.stopCommand(),
 
-                Commands.runOnce({limelightController.setFilterIds(arrayOf(21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9));}),
+                Commands.runOnce({llController.setFilterIds(arrayOf(21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9));}),
 
                 armSystem.enableCoralIntake(),
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
@@ -144,15 +146,16 @@ class PathPlannerAutonomous(val drive: Drive, private val limelightController: L
         autoChooser.addOption("CenterAuto",
             Commands.sequence(
                 Commands.waitTime(1.5.seconds),
-                Commands.runOnce({limelightController.setFilterIds(arrayOf(10, 21));}),
+                Commands.runOnce({llController.setFilterIds(arrayOf(10, 21));}),
                 ParallelCommandGroup(
-                    limelightController.alignRobotAllAxis(LimeLightChoice.Right, 0.215, 0.035)
-                        .until { limelightController.isAtSetPoint(LimeLightChoice.Right, 0.215, 0.035) },
+                    llController.alignRobotAllAxis(LimeLightChoice.Right, llController.getRightLLSetpoints(LimeLightChoice.Right))
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(
+                            LimeLightChoice.Right)) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
                 drive.stopCommand(),
 
-                Commands.runOnce({limelightController.setFilterIds(arrayOf(21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9));}),
+                Commands.runOnce({llController.setFilterIds(arrayOf(21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9));}),
 
                 armSystem.enableCoralIntake(),
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
