@@ -5,25 +5,24 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANrange
 import com.ctre.phoenix6.hardware.TalonFX
-import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.ctre.phoenix6.signals.UpdateModeValue
-import edu.wpi.first.math.MathUtil
 import edu.wpi.first.units.Units.Volts
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.DriverStation
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.InstantCommand
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
+import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand
 import edu.wpi.first.wpilibj2.command.button.Trigger
 import net.tecdroid.subsystems.util.generic.TdSubsystem
-import net.tecdroid.util.amps
 import net.tecdroid.util.inches
+import net.tecdroid.util.seconds
 import net.tecdroid.util.volts
-import java.util.function.Supplier
 import kotlin.math.max
 
 /** Intake Subsystem. Please look for the functions with specific names (Coral or Algae).
@@ -61,13 +60,13 @@ class Intake() : TdSubsystem("Intake") {
 
 
         isHorizontallyDetected.and { DriverStation.isTeleop() }
-            .onTrue(InstantCommand({ horizontalIntake(Pair(6.0.volts, 11.0.volts)) }))
+            .onTrue(InstantCommand({ horizontalIntake(Pair(8.0.volts, 10.0.volts)) }))
 
         intakingCoralTrigger.and { DriverStation.isTeleop() }.and { hasCoralTrigger.asBoolean.not() }.and { isHorizontallyDetected().not() }
-            .onTrue(InstantCommand({ setCoralVoltage(calculateCoralVoltage(6.0.volts)) }))
+            .onTrue(InstantCommand({ sideIntake(6.0.volts) }))
 
-        hasCoralTrigger.and { DriverStation.isTeleop() }
-            .onTrue(InstantCommand({ setCoralVoltage(0.0.volts) }))
+        hasCoralTrigger.and { DriverStation.isTeleop() }.onTrue(
+            WaitCommand(0.1.seconds).andThen(InstantCommand({ setCoralVoltage(0.0.volts) }).andThen({ setAlgaeVoltageCommand(0.0.volts) })))
 
         hasAlgaeTrigger.and { DriverStation.isTeleop() }
             .onTrue(InstantCommand({ setAlgaeVoltage(2.0.volts) }))
@@ -80,21 +79,15 @@ class Intake() : TdSubsystem("Intake") {
     fun setCoralVoltage(coralMotorsVoltage: Voltage) {
         coralLeftMotorController.setControl(VoltageOut(coralMotorsVoltage))
         coralRightMotorController.setControl(VoltageOut(-coralMotorsVoltage))
-        algaeMotorController.setControl(VoltageOut(coralMotorsVoltage))
     }
 
     /**
-     * Sets voltage to the coral AND algae roller motors. Algae motor is also necessary as it helps align the coral.
+     * Sets voltage to the coral roller motors.
      * @param coralMotorsVoltage A [Pair] containing the desired voltage for each motor, from left to right.
-     *      Algae motor would be applied with the maximum voltage in the pair.
      */
     private fun setCoralVoltage(coralMotorsVoltage: Pair<Voltage, Voltage>) {
         coralLeftMotorController.setControl(VoltageOut(coralMotorsVoltage.first))
         coralRightMotorController.setControl(VoltageOut(-coralMotorsVoltage.second))
-        algaeMotorController.setControl(
-            VoltageOut( max(coralMotorsVoltage.first.`in`(Volts), coralMotorsVoltage.second.`in`(Volts) ))
-        )
-
     }
 
     /**
@@ -106,26 +99,29 @@ class Intake() : TdSubsystem("Intake") {
     }
 
     /** This function is necessary for the coral to enter the intake smoothly and not get stuck.
-     * When the left CANRange detects the coral we perform leftVoltage += 5.0.volts.
-     * When the right CANRange detects the coral we perform rightVoltage += 5.0.volts
+     * When the left CANRange detects the coral we perform leftVoltage += 4.0.volts.
+     * When the right CANRange detects the coral we perform rightVoltage += 4.0.volts
      * @return A [Pair] in the following order: coralLeftMotorVoltage, coralRightMotorVoltage.*/
-    fun calculateCoralVoltage(baseVoltage: Voltage) : Pair<Voltage, Voltage> {
+    fun sideIntake(baseVoltage: Voltage) {
         var leftVoltage = baseVoltage
         var rightVoltage = baseVoltage
 
-        if (config.intakeLeftCanRange.isDetected.value) rightVoltage += 5.0.volts
-        else if (config.intakeRightCanRange.isDetected.value) leftVoltage += 5.0.volts
+        if (config.intakeLeftCanRange.isDetected.value) rightVoltage += 4.0.volts
+        else if (config.intakeRightCanRange.isDetected.value) leftVoltage += 4.0.volts
 
-        SmartDashboard.putNumber("LeftVoltage: ", leftVoltage.`in`(Volts))
-        SmartDashboard.putNumber("RightVoltage: ", rightVoltage.`in`(Volts))
-
-        return Pair(leftVoltage, rightVoltage)
+        SequentialCommandGroup(
+            InstantCommand ({ setCoralVoltage(Pair(leftVoltage, rightVoltage.unaryMinus())) }).andThen(setAlgaeVoltageCommand(12.0.volts)),
+            WaitCommand(0.1.seconds).andThen({ setCoralVoltage(Pair(leftVoltage, rightVoltage)) })
+        )
     }
 
     private fun horizontalIntake(voltage: Pair<Voltage, Voltage>) {
-        coralRightMotorController.setControl(VoltageOut(voltage.first))
-        coralLeftMotorController.setControl(VoltageOut(voltage.second))
-        algaeMotorController.setControl(VoltageOut(voltage.first.`in`(Volts).coerceAtLeast(voltage.second.`in`(Volts))))
+        ParallelCommandGroup (
+            InstantCommand({ setCoralVoltage(Pair(voltage.first, voltage.second.unaryMinus())) })
+                .andThen(setAlgaeVoltageCommand(12.0.volts)), // second would invert twice on purpose
+            WaitUntilCommand { config.intakeLeftCanRange.isDetected.value.not() }
+                .andThen({ setCoralVoltage(voltage) })
+        )
     }
 
 

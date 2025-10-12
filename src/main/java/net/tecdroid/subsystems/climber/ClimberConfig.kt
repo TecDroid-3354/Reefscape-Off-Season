@@ -12,8 +12,11 @@ import net.tecdroid.util.NumericId
 import net.tecdroid.util.RotationalDirection
 import net.tecdroid.util.RotationalDirection.Counterclockwise
 import net.tecdroid.util.RotationalDirection.Clockwise
+import net.tecdroid.util.Shaft
+import net.tecdroid.util.Sprocket
 import net.tecdroid.util.amps
 import net.tecdroid.util.degrees
+import net.tecdroid.util.meters
 import net.tecdroid.util.rotations
 import net.tecdroid.util.seconds
 import net.tecdroid.wrappers.ThroughBoreBrand
@@ -43,22 +46,22 @@ val climberConfig = ClimberConfig(
     rollersMotorDirection = Clockwise,
 
     wristMotorControllerId = NumericId(61),
-    wristMotorDirection = Counterclockwise,
+    wristMotorDirection = Clockwise,
 
     motorsCurrentLimit = 40.0.amps,
 
     absoluteEncoderPort = NumericId(0),
-    absoluteEncoderIsInverted = false,
-    absoluteEncoderOffset = (0.0).rotations,
+    absoluteEncoderIsInverted = true,
+    absoluteEncoderOffset = (108.18).degrees,
     absoluteEncoderBrand = ThroughBoreBrand.REV,
 
     reduction = Reduction(5.0 * 5.0 * 5.0),
 
     measureLimits = MeasureLimits(
-        absoluteMinimum = 0.0.rotations,
-        relativeMinimum = 0.01.rotations,
-        relativeMaximum = 0.02.rotations,
-        absoluteMaximum = 0.03.rotations,
+        absoluteMinimum = 32.0.degrees,
+        relativeMinimum = 33.37.degrees,
+        relativeMaximum = 142.23.degrees,
+        absoluteMaximum = 145.0.degrees,
     ),
 
     controlGains = ControlGains(
@@ -70,8 +73,8 @@ val climberConfig = ClimberConfig(
     ),
 
     motionTargets = AngularMotionTargets(
-        cruiseVelocity = 0.0.rotations.per(Second),
-        accelerationTimePeriod = 0.0.seconds,
-        jerkTimePeriod = 0.0.seconds
+        cruiseVelocity = 0.8.rotations.per(Second),
+        accelerationTimePeriod = 0.1.seconds,
+        jerkTimePeriod = 0.1.seconds
     )
 )

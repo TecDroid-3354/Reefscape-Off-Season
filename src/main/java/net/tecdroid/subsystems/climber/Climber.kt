@@ -9,8 +9,10 @@ import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.Rotations
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
+import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.SendableBuilder
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import net.tecdroid.subsystems.util.generic.AngularSubsystem
@@ -18,7 +20,11 @@ import net.tecdroid.subsystems.util.generic.LoggableSubsystem
 import net.tecdroid.subsystems.util.generic.TdSubsystem
 import net.tecdroid.subsystems.util.generic.VoltageControlledSubsystem
 import net.tecdroid.subsystems.util.generic.WithThroughBoreAbsoluteEncoder
+import net.tecdroid.util.degrees
+import net.tecdroid.util.volts
 import net.tecdroid.wrappers.ThroughBoreAbsoluteEncoder
+import kotlin.math.PI
+import kotlin.math.abs
 
 class Climber :
     TdSubsystem("Climber"),
@@ -72,7 +78,7 @@ class Climber :
         val request = MotionMagicVoltage(transformedAngle).withSlot(0)
 
         target = transformedAngle
-        //wristController.setControl(request)
+        wristController.setControl(request)
     }
 
     /**
@@ -83,6 +89,23 @@ class Climber :
         setAngle(targetAngle)
     }
 
+    fun setRawAngle(targetAngle: Angle, voltage: Voltage) {
+        val tab = Shuffleboard.getTab("Driver Tab")
+        var error: Double
+        val tolerance = 2.0.degrees
+        var chi = true
+        while (chi) {
+            error = abs(targetAngle.`in`(Degrees) - angle.`in`(Degrees))
+            // tab.addDouble("Error") {  }
+            setVoltage(if (targetAngle > angle) voltage else -voltage)
+            if (error <= tolerance.`in`(Degrees)) {
+                chi = false
+                setVoltage(0.0.volts)
+                break
+            }
+        }
+    }
+
     /**
      * This method will give voltage to the Climber's WRIST, not rollers.
      * Just for safety, running conditions are checked inside the method, though it's redundant
@@ -90,13 +113,7 @@ class Climber :
      * NOT INTENDED TO USE FOR ROBOT CONTROL.
      */
     override fun setVoltage(voltage: Voltage) {
-        if (angle < config.measureLimits.relativeMaximum && angle > config.measureLimits.relativeMinimum) {
-            val request = VoltageOut(voltage)
-            //wristController.setControl(request)
-        } else {
-            val request = VoltageOut(0.0)
-            //wristController.setControl(request)
-        }
+        wristController.setControl(VoltageOut(voltage))
     }
 
     /**
@@ -113,7 +130,7 @@ class Climber :
         get() = wristController.get()
 
     override val angle: Angle
-        get() = config.reduction.apply(motorPosition)
+        get() = absoluteAngle
 
     override val angularVelocity: AngularVelocity
         get() = config.reduction.apply(motorVelocity)
@@ -178,6 +195,7 @@ class Climber :
         with(builder) {
             addDoubleProperty("Current Angle (Degrees)", { angle.`in`(Degrees) }, {})
             addDoubleProperty("Current Absolute Angle (Degrees)", { absoluteAngle.`in`(Degrees) }, {})
+            addDoubleProperty("Current motor position", { config.reduction.unapply(angle.`in`(Degrees)) }, {})
         }
     }
 

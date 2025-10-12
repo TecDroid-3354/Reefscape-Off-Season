@@ -9,6 +9,7 @@ import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.button.Trigger
 import net.tecdroid.commands.DriveCommands
 import net.tecdroid.constants.SwerveTunerConstants
@@ -21,11 +22,18 @@ import net.tecdroid.subsystems.drivetrain.ModuleIOTalonFX
 import net.tecdroid.constants.Constants
 import net.tecdroid.constants.Constants.driverControllerId
 import net.tecdroid.input.CompliantXboxController
+import net.tecdroid.systems.ArmSystem.ArmOrders
+import net.tecdroid.systems.ArmSystem.ArmPoses
 import net.tecdroid.systems.ArmSystem.ArmSystem
+import net.tecdroid.systems.ArmSystem.BranchSide
 import net.tecdroid.systems.ArmSystem.ReefAppListener
+import net.tecdroid.systems.ArmSystem.ReefAutoLevelSelector
+import net.tecdroid.systems.ArmSystem.Side
 import net.tecdroid.systems.SwerveRotationLockSystem
+import net.tecdroid.util.degrees
 import net.tecdroid.util.stateMachine.StateMachine
 import net.tecdroid.util.stateMachine.States
+import net.tecdroid.util.volts
 import net.tecdroid.vision.limelight.systems.LimeLightChoice
 import net.tecdroid.vision.limelight.systems.LimeLightChoice.*
 import net.tecdroid.vision.limelight.systems.LimelightController
@@ -40,7 +48,7 @@ class RobotContainer {
     private val llController: LimelightController
     //private val pathPlannerAutonomous: PathPlannerAutonomous
     private val swerveRotationLockSystem: SwerveRotationLockSystem
-    private val reefAppListener = ReefAppListener()
+    private val reefAppListener: ReefAppListener
 
     private val xLimelightToAprilTagSetPoint = 0.315
     private val yLimelightToAprilTagSetPoint = 0.035
@@ -93,6 +101,7 @@ class RobotContainer {
         arm.assignCommands()
 
         swerveRotationLockSystem = SwerveRotationLockSystem(drive, controller)
+        reefAppListener = ReefAppListener(llController)
         //pathPlannerAutonomous = PathPlannerAutonomous(drive, limelightController, arm)
     }
 
@@ -111,11 +120,27 @@ class RobotContainer {
         arm.setAllBrake()
         llController.setThrottle(0)
 
-//        controller.rightTrigger().onTrue(InstantCommand({arm.climber.setVoltage(2.0.volts)}))
-//            .onFalse(InstantCommand({arm.climber.setVoltage(0.0.volts)}))
+//        controller.a().onTrue(InstantCommand({ arm.climber.setRawAngle(140.0.degrees, 12.0.volts) }))
+////        //controller.x().onTrue(InstantCommand({ arm.climber.setAngle(140.0.degrees) }))
+////        //controller.y().onTrue(InstantCommand({ arm.climber.setAngle(100.0.degrees) }))
+//        controller.b().onTrue(InstantCommand({ arm.climber.setRawAngle(33.5.degrees, 12.0.volts) }))
+////
+//        controller.rightBumper().onTrue(InstantCommand({arm.climber.setClimberRollersVoltage(8.0.volts)}))
+//            .onFalse(InstantCommand({arm.climber.setClimberRollersVoltage(0.0.volts)}))
 //
-//        controller.rightTrigger().onTrue(InstantCommand({arm.climber.setVoltage(-(2.0).volts)}))
-//            .onFalse(InstantCommand({arm.climber.setVoltage(0.0.volts)}))
+//        controller.x().onTrue(arm.setPoseCommand(ArmPoses.CoralFloorIntakeSafe.pose, ArmOrders.JEW.order))
+//        controller.y().onTrue(arm.setPoseCommand(ArmPoses.BackL2.pose, ArmOrders.JEW.order))
+
+        //controller.povUp().onTrue(InstantCommand({ arm.climber.setRawAngle(140.0.degrees, 12.0.volts) }))
+        controller.povUp().onTrue(InstantCommand({ arm.climber.setVoltage(4.0.volts) }))
+            .onFalse(InstantCommand({ arm.climber.setVoltage(0.0.volts) }))
+
+        //controller.povDown().onTrue(InstantCommand({ arm.climber.setRawAngle(33.5.degrees, 12.0.volts) }))
+        controller.povDown().onTrue(InstantCommand({ arm.climber.setVoltage(-4.0.volts) }))
+            .onFalse(InstantCommand({ arm.climber.setVoltage(0.0.volts) }))
+
+        controller.povRight().onTrue(InstantCommand({ arm.climber.setClimberRollersVoltage(8.0.volts) }))
+            .onFalse(InstantCommand({ arm.climber.setClimberRollersVoltage(0.0.volts) }))
 
         // Reset gyro to 0° when Start button is pressed
         controller.start().onTrue(
@@ -127,47 +152,45 @@ class RobotContainer {
                 )
             )
 
-        //limelightController.setFilterIds(arrayOf(21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9))
-
         // Default command, normal field-relative drive
         drive.defaultCommand = DriveCommands.joystickDrive(
             drive,
             DoubleSupplier { -controller.getLeftY() * 0.8 },
             DoubleSupplier { -controller.getLeftX() * 0.8 },
-            DoubleSupplier { controller.getRightX() * 0.5 })
+            DoubleSupplier { controller.getRightX() * 0.6 })
 
         controller.rightTrigger().whileTrue(llController
-            .alignRobotAllAxis(Right, llController.getRightLLSetpoints(if (llController.isFront) Front else Right)))
+            .alignRobotAllAxis({ llController.getLimelight(BranchSide.Right) }) { llController.rightLLSetpoints })
         controller.leftTrigger().whileTrue(llController
-            .alignRobotAllAxis(Left, llController.getRightLLSetpoints(if (llController.isFront) Front else Left)))
+            .alignRobotAllAxis({ llController.getLimelight(BranchSide.Left) }) { llController.leftLLSetpoints })
 
         // Auto Level Selector
 
         controller.back().onTrue(Commands.runOnce({ autoLevelSelectorMode = !autoLevelSelectorMode }))
 
-        controller.rightTrigger().and { limeLightIsAtSetPoint(if (llController.isFront) Front else Right) && autoLevelSelectorMode }
-            .onTrue(Commands.runOnce({ betterLevelSequence(if (llController.isFront) Front else Right) }))
-
-        controller.leftTrigger().and { limeLightIsAtSetPoint(if (llController.isFront) Front else Left) && autoLevelSelectorMode }
-            .onTrue(Commands.runOnce({ betterLevelSequence(if (llController.isFront) Front else Left) }))
-
-        controller.rightTrigger().whileTrue(llController
-            .alignRobotAllAxis({ reefAppListener.branchChoice.sideChoice },
-                llController.getRightLLSetpoints(if (llController.isFront) Front else Right)))
-        Trigger { limeLightIsAtSetPoint(reefAppListener.branchChoice.sideChoice) }.onTrue(arm.scoringSequence({ reefAppListener.branchChoice.levelPose }))
+//        controller.rightTrigger().and { limeLightIsAtSetPoint(if (llController.isFront) Front else Right) && autoLevelSelectorMode }
+//            .onTrue(Commands.runOnce({ betterLevelSequence(llController.getLimelight(BranchSide.Right), BranchSide.Right) }))
+//
+//        controller.leftTrigger().and { limeLightIsAtSetPoint(if (llController.isFront) Front else Left) && autoLevelSelectorMode }
+//            .onTrue(Commands.runOnce({ betterLevelSequence(if (llController.isFront) Front else Left) }))
+//
+//        controller.rightTrigger().whileTrue(llController
+//            .alignRobotAllAxis({ reefAppListener.branchChoice.sideChoice },
+//                llController.getRightLLSetpoints(if (llController.isFront) Front else Right)))
+//        Trigger { limeLightIsAtSetPoint(reefAppListener.branchChoice.sideChoice) }.onTrue(arm.scoringSequence({ reefAppListener.branchChoice.levelPose }))
 
         //States.IntakeState.setDefaultCommand(swerveRotationLockSystem.lockRotationCMD(LockPositions.CoralStation))
         //States.IntakeState.setEndCommand(Commands.runOnce({swerve.currentCommand.cancel()}))
     }
 
-    private fun betterLevelSequence(choice: LimeLightChoice) {
-        reefAppListener.getBetterLevel(
-            llController.getTargetId(choice),
-            choice
-        )?.let {
-            arm.scoringSequence(it).schedule()
-        } ?: Commands.none()
-    }
+//    private fun betterLevelSequence(llChoice: LimeLightChoice, branchSide: BranchSide) {
+//        reefAppListener.getBetterLevel(
+//            llController.getTargetId(llChoice),
+//            branchSide
+//        )?.let {
+//            arm.scoringSequence(it).schedule()
+//        } ?: Commands.none()
+//    }
 
     private fun advantageScopeLogs() {
         robotPosePublisher.set(drive.pose)
@@ -175,18 +198,18 @@ class RobotContainer {
 
     fun limeLightIsAtSetPoint(limeLightChoice: LimeLightChoice): Boolean {
         return when (limeLightChoice) {
-            Right -> llController.isAtSetPoint(Right, llController.getRightLLSetpoints(Right))
-            Left -> llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(Left))
-            Front -> llController.isAtSetPoint(Front, llController.getRightLLSetpoints(Right)) ||
-                    llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(Left))
+            Right -> llController.isAtSetPoint(Right, llController.rightLLSetpoints)
+            Left -> llController.isAtSetPoint(Left, llController.leftLLSetpoints)
+            Front -> llController.isAtSetPoint(Front, llController.rightLLSetpoints) ||
+                    llController.isAtSetPoint(Front, llController.leftLLSetpoints)
         }
     }
 
     fun limeLightIsAtSetPoint(tolerance: Distance): Boolean {
-         return llController.isAtSetPoint(Front, llController.getRightLLSetpoints(Front), tolerance) ||
-                llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(Front), tolerance)
-                llController.isAtSetPoint(Right, llController.getRightLLSetpoints(Right), tolerance) ||
-                llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(Left), tolerance)
+         return llController.isAtSetPoint(Front, llController.rightLLSetpoints, tolerance) ||
+                llController.isAtSetPoint(Front, llController.leftLLSetpoints, tolerance)
+                llController.isAtSetPoint(Right, llController.rightLLSetpoints, tolerance) ||
+                llController.isAtSetPoint(Left, llController.leftLLSetpoints, tolerance)
     }
 
 

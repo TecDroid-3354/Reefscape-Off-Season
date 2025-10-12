@@ -51,22 +51,22 @@ val wristConfig = WristConfig(
     ),
 
     controlGains = ControlGains(
-        p = 0.1,
+        p = 0.5,
         s = 0.31615,
         v = 0.08368,
         a = 0.0033398,
-        g = 0.043887 + 0.02
+        g = 0.043887 + 0.45
     ),
 
     motionTargets = AngularMotionTargets(
-        cruiseVelocity = 0.5.rotations.per(Second),
+        cruiseVelocity = 1.0.rotations.per(Second),
         accelerationTimePeriod = 0.1.seconds,
         jerkTimePeriod = 0.1.seconds
     ),
 
     algaeMotionTargets = AngularMotionTargets(
-        cruiseVelocity = 0.125.rotations.per(Second),
-        accelerationTimePeriod = 0.5.seconds,
-        jerkTimePeriod = 0.3.seconds
+        cruiseVelocity = 1.0.rotations.per(Second),
+        accelerationTimePeriod = 0.1.seconds,
+        jerkTimePeriod = 0.0.seconds
     )
 )

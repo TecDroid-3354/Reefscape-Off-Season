@@ -83,10 +83,8 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         registerNamedCommand("AlignAndScoreRightBranch",
             Commands.sequence(
                 ParallelCommandGroup(
-                    llController.alignRobotAllAxis(LimeLightChoice.Right, llController.getRightLLSetpoints(
-                        LimeLightChoice.Right))
-                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(
-                            LimeLightChoice.Right)) },
+                    llController.alignRobotAllAxis({ LimeLightChoice.Right }, { llController.rightLLSetpoints })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.rightLLSetpoints) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
                 drive.stopCommand(),
@@ -100,8 +98,10 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         registerNamedCommand("AlignAndScoreLeftBranch",
             Commands.sequence(
                 ParallelCommandGroup(
-                    llController.alignRobotAllAxis(LimeLightChoice.Left, llController.getLeftLLSetpoints(LimeLightChoice.Left))
-                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getLeftLLSetpoints(LimeLightChoice.Left)) },
+                    llController.alignRobotAllAxis(
+                        { LimeLightChoice.Left },
+                        { llController.leftLLSetpoints })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.leftLLSetpoints) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
 
@@ -117,8 +117,10 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
             Commands.sequence(
                 Commands.runOnce({llController.setFilterIds(arrayOf(20, 19, 11, 6));}),
                 ParallelCommandGroup(
-                    llController.alignRobotAllAxis(LimeLightChoice.Right, llController.getRightLLSetpoints(LimeLightChoice.Right))
-                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(LimeLightChoice.Right)) },
+                    llController.alignRobotAllAxis(
+                        { LimeLightChoice.Right },
+                        { llController.rightLLSetpoints })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.rightLLSetpoints) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
 
@@ -148,9 +150,10 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                 Commands.waitTime(1.5.seconds),
                 Commands.runOnce({llController.setFilterIds(arrayOf(10, 21));}),
                 ParallelCommandGroup(
-                    llController.alignRobotAllAxis(LimeLightChoice.Right, llController.getRightLLSetpoints(LimeLightChoice.Right))
-                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(
-                            LimeLightChoice.Right)) },
+                    llController.alignRobotAllAxis(
+                        { LimeLightChoice.Right },
+                        { llController.rightLLSetpoints })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.rightLLSetpoints) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
                 drive.stopCommand(),

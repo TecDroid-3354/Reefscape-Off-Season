@@ -35,6 +35,7 @@ class Circle private constructor(val radius: Distance) {
     }
 }
 typealias Sprocket = Circle
+typealias Shaft = Circle
 
 //
 // Rectangular
