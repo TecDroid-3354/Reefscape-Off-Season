@@ -122,7 +122,7 @@ enum class ArmPoses(var pose: ArmPose) {
     BackL4(
         ArmPose(
             wristPosition           = 220.0.degrees - 90.0.degrees,
-            elevatorDisplacement    = 39.0.inches,
+            elevatorDisplacement    = 39.0.inches + 0.005.meters,
             elevatorJointPosition   = 90.0.degrees,
             targetCoralVoltage      = 8.0.volts,
             targetAlgaeVoltage      = 8.0.volts
@@ -181,7 +181,7 @@ enum class ArmPoses(var pose: ArmPose) {
 
     CoralFloorIntake(
         ArmPose(
-            wristPosition           = -(0.5).degrees,
+            wristPosition           = -(1.0).degrees,
             elevatorDisplacement    = 0.0.inches,
             elevatorJointPosition   = 0.5.degrees,
             targetCoralVoltage      = 6.0.volts,
@@ -454,8 +454,13 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         controller.y().onTrue(
             Commands.runOnce({
                 scheduleCMD(when(stateMachine.getCurrentState()){
-                    States.ScoreState -> WaitUntilCommand { limeLightIsAtSetPoint(0.1.meters) }.andThen(
-                        scoringSequence(PoseCommands.BackL4))
+                    States.ScoreState -> Commands.either (
+                        scoringSequence(PoseCommands.BackL4),
+                        setPoseCommand(PoseCommands.BackL4),
+                        { limeLightIsAtSetPoint(0.415.meters) }
+                    )
+                        //WaitUntilCommand { limeLightIsAtSetPoint(0.1.meters) }.andThen(
+                        //scoringSequence(PoseCommands.BackL4))
 
                     States.CoralState -> setPoseCommand(PoseCommands.BackL4)
                     States.IntakeState -> setPoseCommand(PoseCommands.BackL4)
@@ -478,8 +483,14 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // B
         controller.b().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.ScoreState -> WaitUntilCommand { limeLightIsAtSetPoint(0.13.meters) }.andThen(
-                        scoringSequence(PoseCommands.BackL3))
+                States.ScoreState -> Commands.either (
+                    scoringSequence(PoseCommands.BackL3),
+                    setPoseCommand(PoseCommands.BackL3),
+                    { limeLightIsAtSetPoint(0.445.meters) }
+                )
+
+                    //WaitUntilCommand { limeLightIsAtSetPoint(0.13.meters) }.andThen(
+                        //scoringSequence(PoseCommands.BackL3))
 
 
                 States.CoralState -> setPoseCommand(PoseCommands.BackL3)
@@ -500,8 +511,13 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // A
         controller.a().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.ScoreState ->  WaitUntilCommand { limeLightIsAtSetPoint(0.25.meters) }.andThen(
-                    scoringSequence(PoseCommands.BackL2))
+                States.ScoreState -> Commands.either (
+                    scoringSequence(PoseCommands.BackL2),
+                    setPoseCommand(PoseCommands.BackL2),
+                    { limeLightIsAtSetPoint((-0.145).meters) }
+                )
+                    //WaitUntilCommand { limeLightIsAtSetPoint(0.25.meters) }.andThen(
+                    //scoringSequence(PoseCommands.BackL2))
 
                 States.CoralState -> setPoseCommand(PoseCommands.BackL2)
                 States.IntakeState -> setPoseCommand(PoseCommands.BackL2)
