@@ -32,7 +32,7 @@ val intakeConfig = IntakeConfig(
     coralMotorsDirection = RotationalDirection.Counterclockwise,
 
     motorsCurrentLimit = 40.0.amps,
-    algaeSupplyCurrentThreshold = 15.0.amps,
+    algaeSupplyCurrentThreshold = 35.0.amps,
 
     intakeLeftCanRange = CANrange(46),
     intakeCenterCanRange = CANrange(47),

@@ -5,16 +5,16 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.NeutralModeValue
+import edu.wpi.first.units.Units.Amps
 import edu.wpi.first.units.Units.Degrees
-import edu.wpi.first.units.Units.Rotations
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
-import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.SendableBuilder
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.button.Trigger
 import net.tecdroid.subsystems.util.generic.AngularSubsystem
 import net.tecdroid.subsystems.util.generic.LoggableSubsystem
 import net.tecdroid.subsystems.util.generic.TdSubsystem
@@ -23,7 +23,6 @@ import net.tecdroid.subsystems.util.generic.WithThroughBoreAbsoluteEncoder
 import net.tecdroid.util.degrees
 import net.tecdroid.util.volts
 import net.tecdroid.wrappers.ThroughBoreAbsoluteEncoder
-import kotlin.math.PI
 import kotlin.math.abs
 
 class Climber :
@@ -52,6 +51,9 @@ class Climber :
         matchRelativeEncodersToAbsoluteEncoders()
         publishToShuffleboard()
         target = motorPosition
+        Trigger{ forwardsRunningCondition.invoke().not() || backwardsRunningCondition.invoke().not() }.onTrue(
+            Commands.run({ setVoltage(0.0.volts) })
+        )
     }
 
     /**
@@ -90,16 +92,15 @@ class Climber :
     }
 
     fun setRawAngle(targetAngle: Angle, voltage: Voltage) {
-        val tab = Shuffleboard.getTab("Driver Tab")
         var error: Double
         val tolerance = 2.0.degrees
-        var chi = true
-        while (chi) {
+        var canClimb = true
+        while (canClimb) {
             error = abs(targetAngle.`in`(Degrees) - angle.`in`(Degrees))
             // tab.addDouble("Error") {  }
-            setVoltage(if (targetAngle > angle) voltage else -voltage)
+            setVoltage(if (targetAngle > angle) -voltage else voltage)
             if (error <= tolerance.`in`(Degrees)) {
-                chi = false
+                canClimb = false
                 setVoltage(0.0.volts)
                 break
             }
@@ -195,7 +196,7 @@ class Climber :
         with(builder) {
             addDoubleProperty("Current Angle (Degrees)", { angle.`in`(Degrees) }, {})
             addDoubleProperty("Current Absolute Angle (Degrees)", { absoluteAngle.`in`(Degrees) }, {})
-            addDoubleProperty("Current motor position", { config.reduction.unapply(angle.`in`(Degrees)) }, {})
+            addDoubleProperty("Climber rolling motor supply current with 8.0 volts", { rollersController.supplyCurrent.value.`in`(Amps) }, {})
         }
     }
 

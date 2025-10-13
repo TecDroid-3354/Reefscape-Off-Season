@@ -2,6 +2,7 @@
 
 package net.tecdroid.systems.ArmSystem
 
+import edu.wpi.first.hal.FRCNetComm
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.WaitCommand
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand
 import edu.wpi.first.wpilibj2.command.button.Trigger
 import net.tecdroid.input.CompliantXboxController
 import net.tecdroid.subsystems.climber.Climber
@@ -191,7 +193,7 @@ enum class ArmPoses(var pose: ArmPose) {
         ArmPose(
             wristPosition           = 110.0.degrees,
             elevatorDisplacement    = 0.0.inches,
-            elevatorJointPosition   = 0.0.degrees,
+            elevatorJointPosition   = 0.5.degrees,
             targetCoralVoltage      = 6.0.volts,
             targetAlgaeVoltage      = 12.0.volts
     )
@@ -227,6 +229,7 @@ enum class PoseCommands(val pose: ArmPose, val order: ArmOrder) {
     BackL4(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
     BackL3(ArmPoses.BackL3.pose, ArmOrders.JEW.order),
     BackL2(ArmPoses.BackL2.pose, ArmOrders.JEW.order),
+    CoralFloorIntakeSafe(ArmPoses.CoralFloorIntakeSafe.pose, ArmOrders.EWJ.order),
     CoralStation(ArmPoses.CoralStation.pose, ArmOrders.EJW.order),
     Processor(ArmPoses.Processor.pose, ArmOrders.EJW.order),
     Passive(ArmPoses.Passive.pose, ArmOrders.JEW.order),
@@ -237,13 +240,13 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
     val elevator = Elevator()
     val joint = ElevatorJoint()
     val climber = Climber()
-    val intake = Intake()
+    val intake = Intake(stateMachine.isState(States.ScoreState))
 
     private var coralTargetVoltage = 0.0.volts
     private var algaeTargetVoltage = 0.0.volts
 
     var isScoring = false
-    val climbTrigger = Trigger{ controller.rightTrigger().asBoolean && controller.leftTrigger().asBoolean && getSensorRead().not() }
+    val climbTrigger = Trigger{ controller.leftStick().asBoolean && controller.rightStick().asBoolean && hasCoral().not() }
 
     private var currentPose = ArmPoses.Passive.pose
 
@@ -349,23 +352,21 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
 
     fun publishShuffleBoardData() {
         val tab = Shuffleboard.getTab("Driver Tab")
-        tab.addBoolean("coral", { getSensorRead() })
-        tab.addBoolean("llIsAtSetPoint", { limeLightIsAtSetPoint(0.1.meters)})
+        tab.addBoolean("coral", { hasCoral() })
+        tab.addBoolean("llIsAtSetPoint", { limeLightIsAtSetPoint(0.2.meters)})
         tab.addString("State", { stateMachine.getCurrentState().toString() })
         tab.addDouble("Target Coral Voltage") { coralTargetVoltage.`in`(Volts) }
         tab.addDouble("Target Algae Voltage") { algaeTargetVoltage.`in`(Volts) }
         tab.addDouble("Target Wrist Pos") { currentPose.wristPosition.`in`(Degrees) }
     }
 
-    fun getSensorRead() : Boolean = intake.hasCoral()
+    fun hasCoral() : Boolean = intake.hasCoral()
 
     fun scoringSequence(pose: PoseCommands): Command {
-        return setPoseCommand(pose).andThen(WaitCommand(1.0.seconds)).andThen(enableCoralOuttake())
+        return setPoseCommand(pose).andThen(WaitCommand(0.2.seconds)).andThen(Commands.runOnce({
+            scheduleCMD(ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
+        }))
     }
-
-    /*fun scoringSequence(pose: PoseCommands): Command {
-        return setPoseCommand(pose).andThen(WaitCommand(0.15.seconds)).andThen(enableIntake())
-    }*/
 
     fun scoringSequence(pose: () -> PoseCommands): Command {
         return setPoseCommand(pose.invoke()).andThen(WaitCommand(0.15.seconds)).andThen(enableCoralOuttake())
@@ -381,6 +382,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
     // Used to avoid the one command binding of the trigger, and process the logic out of the trigger command
     private fun scheduleCMD(command: Command) = command.schedule()
 
+    // ! State machine
+
     private fun assignStatesCommands() {
         // Active passive intake
         States.AlgaeState.setInitialCommand(intake.setAlgaeVoltageCommand(1.5.volts))
@@ -390,22 +393,35 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
 
         // Go to passive position after score a coral
         States.ScoreState.setEndCommand(SequentialCommandGroup(
+            WaitUntilCommand({ hasCoral().not() }),
             WaitCommand(0.1.seconds),
-            disableCoralIntake(),
+            intake.setAlgaeVoltageCommand(0.0.volts),
+            intake.setCoralVoltageCommand(0.0.volts),
             setPoseCommand(ArmPoses.CoralFloorIntakeSafe.pose, ArmOrders.EJW.order)
         ))
 
 
         // Set a physical condition for triggering the climb state
         stateMachine.addCondition({ climbTrigger.asBoolean }, States.ClimbState, Phase.Teleop )
-        // When climb state is triggered, the processor pose will be scheduled so climber is able to work.
-        States.ClimbState.setInitialCommand(setPoseCommand(PoseCommands.Processor))
+        // When climb state is triggered, the coral safe intake pose will be scheduled so climber is able to work.
+        /*States.ClimbState.setInitialCommand(SequentialCommandGroup(
+            setPoseCommand(PoseCommands.CoralFloorIntakeSafe),
+            Commands.run({
+                scheduleCMD(
+                    Commands.run({ climber.setRawAngle(140.0.degrees, 8.0.volts) }))
+            }),
+            Commands.
+            run({
+                scheduleCMD(
+                    Commands.run({ climber.setClimberRollersVoltage(12.0.volts) }))
+            })
+        ))*/
 
         // Change to score state when coral is detected
-        stateMachine.addCondition({ getSensorRead() }, States.ScoreState, Phase.Teleop)
+        stateMachine.addCondition({ hasCoral() }, States.ScoreState, Phase.Teleop)
 
         // Change to coral state if we are in score state, and we just pull out a coral
-        stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !getSensorRead() }, States.CoralState, Phase.Teleop)
+        stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !hasCoral() }, States.CoralState, Phase.Teleop)
 
     }
 
@@ -438,10 +454,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         controller.y().onTrue(
             Commands.runOnce({
                 scheduleCMD(when(stateMachine.getCurrentState()){
-                    States.ScoreState -> Commands.either(
-                        scoringSequence(PoseCommands.BackL4),
-                        setPoseCommand(PoseCommands.BackL4),
-                        { limeLightIsAtSetPoint(0.75.meters) })
+                    States.ScoreState -> WaitUntilCommand { limeLightIsAtSetPoint(0.1.meters) }.andThen(
+                        scoringSequence(PoseCommands.BackL4))
 
                     States.CoralState -> setPoseCommand(PoseCommands.BackL4)
                     States.IntakeState -> setPoseCommand(PoseCommands.BackL4)
@@ -454,7 +468,9 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
 //                        ).andThen({ setIsLow(false) }),
 //                        disableAlgaeIntake())
 
-                    States.ClimbState -> Commands.none()
+                    // angle to climb is 33.5 deg
+                    // made to go 6deg inside
+                    States.ClimbState -> Commands.run({ climber.setRawAngle(130.0.degrees, 8.0.volts) })
                 })
             })
         )
@@ -462,10 +478,9 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // B
         controller.b().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.ScoreState -> Commands.either(
-                    scoringSequence(PoseCommands.BackL3),
-                    setPoseCommand(PoseCommands.BackL3),
-                    { limeLightIsAtSetPoint(0.75.meters) })
+                States.ScoreState -> WaitUntilCommand { limeLightIsAtSetPoint(0.13.meters) }.andThen(
+                        scoringSequence(PoseCommands.BackL3))
+
 
                 States.CoralState -> setPoseCommand(PoseCommands.BackL3)
                 States.IntakeState -> setPoseCommand(PoseCommands.BackL3)
@@ -485,10 +500,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // A
         controller.a().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.ScoreState -> Commands.either(
-                    scoringSequence(PoseCommands.BackL2),
-                    setPoseCommand(PoseCommands.BackL2),
-                    { limeLightIsAtSetPoint(0.75.meters) })
+                States.ScoreState ->  WaitUntilCommand { limeLightIsAtSetPoint(0.25.meters) }.andThen(
+                    scoringSequence(PoseCommands.BackL2))
 
                 States.CoralState -> setPoseCommand(PoseCommands.BackL2)
                 States.IntakeState -> setPoseCommand(PoseCommands.BackL2)
@@ -519,7 +532,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                     setPoseCommand(ArmPoses.CoralFloorIntakeSafe.pose, ArmOrders.EJW.order),
                     Commands.runOnce({ stateMachine.changeState(States.IntakeState)}))
 
-                States.ClimbState -> InstantCommand({ climber.setClimberWristAngle(45.0.degrees) })
+                States.ClimbState -> Commands.run({ climber.setRawAngle(100.0.degrees, 8.0.volts) })
             })
         }))
 
@@ -544,9 +557,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                                 ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
                             })
 
-                            States.ClimbState -> Commands.runOnce({scheduleCMD(
-                                Commands.run({ climber.setClimberRollersVoltage(12.0.volts) })
-                            )})
+                            States.ClimbState -> Commands.none()
 
                             else -> ParallelCommandGroup(
                                 setPoseCommand(ArmPoses.CoralFloorIntake.pose, ArmOrders.EJW.order),
@@ -556,7 +567,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                         }
                     )
                 })
-        )
+            )
             .onFalse(Commands.runOnce({
                 scheduleCMD(
                     when (stateMachine.getCurrentState()) {

@@ -51,10 +51,10 @@ val wristConfig = WristConfig(
     ),
 
     controlGains = ControlGains(
-        p = 0.5,
+        p = 0.195, // original value (as per oct-9): 0.1
         s = 0.31615,
-        v = 0.08368,
-        a = 0.0033398,
+        v = 0.09368, // original value: 0.08368
+        a = 0.0033398, // original value: 0.0033398
         g = 0.043887 + 0.45
     ),
 

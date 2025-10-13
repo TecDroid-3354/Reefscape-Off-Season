@@ -26,6 +26,7 @@ import net.tecdroid.systems.ArmSystem.ArmOrders
 import net.tecdroid.systems.ArmSystem.ArmPoses
 import net.tecdroid.systems.ArmSystem.ArmSystem
 import net.tecdroid.systems.ArmSystem.BranchSide
+import net.tecdroid.systems.ArmSystem.PoseCommands
 import net.tecdroid.systems.ArmSystem.ReefAppListener
 import net.tecdroid.systems.ArmSystem.ReefAutoLevelSelector
 import net.tecdroid.systems.ArmSystem.Side
@@ -131,16 +132,15 @@ class RobotContainer {
 //        controller.x().onTrue(arm.setPoseCommand(ArmPoses.CoralFloorIntakeSafe.pose, ArmOrders.JEW.order))
 //        controller.y().onTrue(arm.setPoseCommand(ArmPoses.BackL2.pose, ArmOrders.JEW.order))
 
-        //controller.povUp().onTrue(InstantCommand({ arm.climber.setRawAngle(140.0.degrees, 12.0.volts) }))
-        controller.povUp().onTrue(InstantCommand({ arm.climber.setVoltage(4.0.volts) }))
+        // ! Analog climber
+        controller.povUp().onTrue(InstantCommand({ arm.climber.setVoltage(8.0.volts) }))
             .onFalse(InstantCommand({ arm.climber.setVoltage(0.0.volts) }))
 
-        //controller.povDown().onTrue(InstantCommand({ arm.climber.setRawAngle(33.5.degrees, 12.0.volts) }))
-        controller.povDown().onTrue(InstantCommand({ arm.climber.setVoltage(-4.0.volts) }))
+        controller.povDown().onTrue(InstantCommand({ arm.climber.setVoltage(-8.0.volts) }))
             .onFalse(InstantCommand({ arm.climber.setVoltage(0.0.volts) }))
 
-        controller.povRight().onTrue(InstantCommand({ arm.climber.setClimberRollersVoltage(8.0.volts) }))
-            .onFalse(InstantCommand({ arm.climber.setClimberRollersVoltage(0.0.volts) }))
+        controller.povRight().onTrue(InstantCommand({ arm.setPoseCommand(PoseCommands.CoralStation.pose, ArmOrders.JEW.order) }))
+
 
         // Reset gyro to 0° when Start button is pressed
         controller.start().onTrue(
@@ -207,7 +207,7 @@ class RobotContainer {
 
     fun limeLightIsAtSetPoint(tolerance: Distance): Boolean {
          return llController.isAtSetPoint(Front, llController.rightLLSetpoints, tolerance) ||
-                llController.isAtSetPoint(Front, llController.leftLLSetpoints, tolerance)
+                llController.isAtSetPoint(Front, llController.leftLLSetpoints, tolerance) ||
                 llController.isAtSetPoint(Right, llController.rightLLSetpoints, tolerance) ||
                 llController.isAtSetPoint(Left, llController.leftLLSetpoints, tolerance)
     }

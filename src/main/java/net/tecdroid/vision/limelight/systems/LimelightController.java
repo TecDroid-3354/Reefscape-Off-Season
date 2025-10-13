@@ -45,15 +45,15 @@ public class LimelightController {
 
     private final LimelightAprilTagDetector frontLimelight = new LimelightAprilTagDetector(new LimelightConfig(StringConstantsKt.frontLimelightName, new Pose3d()));
 
-    /** Setpoints for the back left camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(31.5), Centimeters.of(2.2));
+    /** Setpoints for the back left camera as follows: Pair<FrontalDistance, HorizontalDistance(As closer to zero, distance will increase)> */
+    private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(31.5), Centimeters.of(2.5));
     /** Setpoints for the back right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(31.5), Centimeters.of(-2.2));
+    private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(31.5), Centimeters.of(-2.7));
     /** Setpoints for the front left camera as follows: Pair<FrontalDistance, HorizontalDistance> */
     private final Pair<Distance, Distance> frontLeftLLSetpoints = new Pair<>(Centimeters.of(81.5), Centimeters.of(-2.2));
     /** Setpoints for the front right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
     private final Pair<Distance, Distance> frontRightLLSetpoints = new Pair<>(Centimeters.of(81.5), Centimeters.of(2.2));
-    private final Distance positionTolerance = Meters.of(0.1);
+    private final Distance positionTolerance = Centimeters.of(5);
 
     /** Chassis: 27.5in * 27.5in; Center: 27.5in / 2 = 13.75in; Bumpers = 3.25in
      * back LL: LLForward = -0.1905m; back LL lens to end of bumper: (Center + Bumpers) - LLForward = 24.13cm
@@ -253,7 +253,7 @@ public class LimelightController {
         return limitedYaw;
     }
 
-    private Pair<Distance, Distance> chooseBackSetpoints(PoseCommands pose, LimeLightChoice choice) {
+    private Pair<Distance, Distance> chooseSetpoints(PoseCommands pose, LimeLightChoice choice) {
         Distance forwardSetPoint = Centimeters.of(0.0);
         Distance horizontalSetpoint = Centimeters.of(0.0);
 

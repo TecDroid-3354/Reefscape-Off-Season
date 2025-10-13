@@ -60,8 +60,8 @@ val climberConfig = ClimberConfig(
     measureLimits = MeasureLimits(
         absoluteMinimum = 32.0.degrees,
         relativeMinimum = 33.37.degrees,
-        relativeMaximum = 142.23.degrees,
-        absoluteMaximum = 145.0.degrees,
+        relativeMaximum = 140.23.degrees,
+        absoluteMaximum = 142.0.degrees,
     ),
 
     controlGains = ControlGains(

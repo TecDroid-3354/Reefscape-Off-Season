@@ -7,10 +7,13 @@ import com.ctre.phoenix6.hardware.CANrange
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.ctre.phoenix6.signals.UpdateModeValue
+import edu.wpi.first.units.Units.Amps
+import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.Volts
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
+import edu.wpi.first.util.sendable.SendableBuilder
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.InstantCommand
@@ -19,16 +22,18 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand
 import edu.wpi.first.wpilibj2.command.button.Trigger
+import net.tecdroid.subsystems.util.generic.LoggableSubsystem
 import net.tecdroid.subsystems.util.generic.TdSubsystem
 import net.tecdroid.util.inches
 import net.tecdroid.util.seconds
 import net.tecdroid.util.volts
+import java.util.function.BooleanSupplier
 import kotlin.math.max
 
 /** Intake Subsystem. Please look for the functions with specific names (Coral or Algae).
  * [coralSensors] MUST have the following order:
  * Left Intake CANRange, Center Intake CANRange, Right Intake CANRange, Inner Intake CANRange */
-class Intake() : TdSubsystem("Intake") {
+class Intake(isScoring: BooleanSupplier) : TdSubsystem("Intake"), LoggableSubsystem {
     private val config = intakeConfig
     private val algaeMotorController = TalonFX(config.algaeMotorControllerId.id)
     private val coralRightMotorController = TalonFX(config.coralRightMotorControllerId.id)
@@ -41,6 +46,8 @@ class Intake() : TdSubsystem("Intake") {
     private val hasAlgaeTrigger = Trigger {
         algaeMotorController.supplyCurrent.value > config.algaeSupplyCurrentThreshold
     }
+    val intakeCanRanges = listOf<CANrange>(config.intakeLeftCanRange, config.intakeCenterCanRange, config.intakeRightCanRange)
+
 
     override val forwardsRunningCondition = { true }
     override val backwardsRunningCondition = { true }
@@ -60,13 +67,18 @@ class Intake() : TdSubsystem("Intake") {
 
 
         isHorizontallyDetected.and { DriverStation.isTeleop() }
-            .onTrue(InstantCommand({ horizontalIntake(Pair(8.0.volts, 10.0.volts)) }))
+            .onTrue(SequentialCommandGroup(
+                InstantCommand({ horizontalIntake(Pair(8.0.volts, 10.0.volts)) } ),
+                setAlgaeVoltageCommand(0.0.volts)
+                ))
 
         intakingCoralTrigger.and { DriverStation.isTeleop() }.and { hasCoralTrigger.asBoolean.not() }.and { isHorizontallyDetected().not() }
             .onTrue(InstantCommand({ sideIntake(6.0.volts) }))
 
         hasCoralTrigger.and { DriverStation.isTeleop() }.onTrue(
-            WaitCommand(0.1.seconds).andThen(InstantCommand({ setCoralVoltage(0.0.volts) }).andThen({ setAlgaeVoltageCommand(0.0.volts) })))
+            WaitCommand(0.1.seconds).andThen(
+                ParallelCommandGroup(setCoralVoltageCommand(0.0.volts), setAlgaeVoltageCommand(0.0.volts))
+            ))
 
         hasAlgaeTrigger.and { DriverStation.isTeleop() }
             .onTrue(InstantCommand({ setAlgaeVoltage(2.0.volts) }))
@@ -115,6 +127,7 @@ class Intake() : TdSubsystem("Intake") {
         )
     }
 
+    // coral voltage
     private fun horizontalIntake(voltage: Pair<Voltage, Voltage>) {
         ParallelCommandGroup (
             InstantCommand({ setCoralVoltage(Pair(voltage.first, voltage.second.unaryMinus())) })
@@ -155,7 +168,7 @@ class Intake() : TdSubsystem("Intake") {
     }
 
     /** Checks the inner CANRange, as it's the one that detects the coral when fully inside intake */
-    fun hasCoral(): Boolean = config.intakeInnerCanRange.isDetected.value
+    fun hasCoral(): Boolean = config.intakeInnerCanRange.isDetected.value && config.intakeCenterCanRange.isDetected.value
 
     fun isHorizontallyDetected(): Boolean {
         for (sensor in listOf<CANrange>(config.intakeLeftCanRange, config.intakeCenterCanRange, config.intakeRightCanRange)) {
@@ -207,6 +220,12 @@ class Intake() : TdSubsystem("Intake") {
             config.intakeLeftCanRange, config.intakeCenterCanRange, config.intakeRightCanRange, config.intakeInnerCanRange)) {
             sensor.clearStickyFaults()
             sensor.configurator.apply(canRangeConfig)
+        }
+    }
+
+    override fun initSendable(builder: SendableBuilder) {
+        with (builder) {
+            addDoubleProperty("Intake algae motor amperage with 12V ", { algaeMotorController.supplyCurrent.value.`in`(Amps) }, {})
         }
     }
 }
