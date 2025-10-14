@@ -51,7 +51,8 @@ class Climber :
         matchRelativeEncodersToAbsoluteEncoders()
         publishToShuffleboard()
         target = motorPosition
-        Trigger{ forwardsRunningCondition.invoke().not() || backwardsRunningCondition.invoke().not() }.onTrue(
+
+        Trigger { forwardsRunningCondition.invoke().not() || backwardsRunningCondition.invoke().not() }.onTrue(
             Commands.run({ setVoltage(0.0.volts) })
         )
     }
