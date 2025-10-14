@@ -51,9 +51,6 @@ class Climber :
         matchRelativeEncodersToAbsoluteEncoders()
         publishToShuffleboard()
         target = motorPosition
-        Trigger{ forwardsRunningCondition.invoke().not() || backwardsRunningCondition.invoke().not() }.onTrue(
-            Commands.run({ setVoltage(0.0.volts) })
-        )
     }
 
     /**
@@ -76,7 +73,12 @@ class Climber :
      */
     override fun setAngle(targetAngle: Angle) {
         val clampedAngle = config.measureLimits.coerceIn(targetAngle) as Angle
-        val transformedAngle = config.reduction.unapply(clampedAngle)
+        print("Clamped angle: ")
+        print(clampedAngle.`in`(Degrees))
+        print("\n")
+        val transformedAngle = config.reduction.apply(clampedAngle)
+        print("Transformed angle: ")
+        print(transformedAngle.`in`(Degrees))
         val request = MotionMagicVoltage(transformedAngle).withSlot(0)
 
         target = transformedAngle

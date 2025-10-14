@@ -21,8 +21,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.LimelightHelpers;
 import net.tecdroid.constants.StringConstantsKt;
-import net.tecdroid.systems.ArmSystem.BranchSide;
-import net.tecdroid.systems.ArmSystem.PoseCommands;
+import net.tecdroid.systems.ArmSystem.*;
 import net.tecdroid.util.ControlGains;
 import net.tecdroid.vision.limelight.Limelight;
 import net.tecdroid.vision.limelight.LimelightAprilTagDetector;
@@ -48,11 +47,11 @@ public class LimelightController {
     /** Setpoints for the back left camera as follows: Pair<FrontalDistance, HorizontalDistance(As closer to zero, distance will increase)> */
     private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(31.5), Centimeters.of(2.5));
     /** Setpoints for the back right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(31.5), Centimeters.of(-2.7));
+    private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(66.5), Centimeters.of(-2.7));
     /** Setpoints for the front left camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> frontLeftLLSetpoints = new Pair<>(Centimeters.of(81.5), Centimeters.of(-2.2));
+    private final Pair<Distance, Distance> frontLeftLLSetpoints = new Pair<>(Centimeters.of(66.5), Centimeters.of(-2.5));
     /** Setpoints for the front right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> frontRightLLSetpoints = new Pair<>(Centimeters.of(81.5), Centimeters.of(2.2));
+    private final Pair<Distance, Distance> frontRightLLSetpoints = new Pair<>(Centimeters.of(66.5), Centimeters.of(32.5));
     private final Distance positionTolerance = Centimeters.of(5);
 
     /** Chassis: 27.5in * 27.5in; Center: 27.5in / 2 = 13.75in; Bumpers = 3.25in
@@ -65,7 +64,7 @@ public class LimelightController {
      * TODO() = Recalculate base forward setpoint in front limelight
      */
     private final ReefPosesForwardDelta reefPosesForwardDeltas = new ReefPosesForwardDelta(
-            Centimeters.of(-4.83), Centimeters.of(-4.83), Centimeters.of(+0.25),
+            Centimeters.of(-4.83), Centimeters.of(-4.83), Centimeters.of(0.25),
             Centimeters.of(0.0), Centimeters.of(0.0), Centimeters.of(0.0), Centimeters.of(0.0));
     private final Subsystem requiredSubsystem;
 
@@ -195,12 +194,38 @@ public class LimelightController {
             case Left -> isFront() ? LimeLightChoice.Front : LimeLightChoice.Left;
         };
     }
-    public Pair<Distance, Distance> getRightLLSetpoints() {
-        return isFront() ? frontRightLLSetpoints : backRightLLSetpoints;
+    public Pair<Distance, Distance> getRightLLSetpoints(ArmPoses pose) {
+        Distance horizontalOffset = isFront() ? frontRightLLSetpoints.getSecond() : backRightLLSetpoints.getSecond();
+        Distance forwardSetpoint = isFront() ? frontRightLLSetpoints.getFirst() : backRightLLSetpoints.getFirst();
+
+        Distance forwardOffset = switch (pose) {
+            case FrontL1 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL1Delta());
+            case FrontL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL2Delta());
+            case FrontL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL3Delta());
+            case FrontL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL4Delta());
+            case BackL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL2Delta());
+            case BackL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL3Delta());
+            case BackL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL4Delta());
+            default -> forwardSetpoint;
+        };
+        return new Pair<Distance, Distance>(forwardOffset, horizontalOffset);
     }
 
-    public Pair<Distance, Distance> getLeftLLSetpoints() {
-        return isFront() ? frontLeftLLSetpoints : backLeftLLSetpoints;
+    public Pair<Distance, Distance> getLeftLLSetpoints(ArmPoses pose) {
+        Distance horizontalOffset = isFront() ? frontLeftLLSetpoints.getSecond() : backLeftLLSetpoints.getSecond();
+        Distance forwardSetpoint = isFront() ? frontLeftLLSetpoints.getFirst() : backLeftLLSetpoints.getFirst();
+
+        Distance forwardOffset = switch (pose) {
+            case FrontL1 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL1Delta());
+            case FrontL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL2Delta());
+            case FrontL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL3Delta());
+            case FrontL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL4Delta());
+            case BackL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL2Delta());
+            case BackL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL3Delta());
+            case BackL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL4Delta());
+            default -> forwardSetpoint;
+        };
+        return new Pair<Distance, Distance>(forwardOffset, horizontalOffset);
     }
 
     private Pose3d getTargetPositionInCameraSpace(LimeLightChoice choice) {
@@ -243,8 +268,8 @@ public class LimelightController {
         leftLimelight.setIdFilter(targetIds);
         frontLimelight.setIdFilter(targetIds);
     }
-
     // Obtain a yaw between the range [0, 360]
+
     private double getLimitedYaw() {
         double limitedYaw = yaw.getAsDouble() % 360;
         if (limitedYaw < 0) {
@@ -252,42 +277,6 @@ public class LimelightController {
         }
         return limitedYaw;
     }
-
-    private Pair<Distance, Distance> chooseSetpoints(PoseCommands pose, LimeLightChoice choice) {
-        Distance forwardSetPoint = Centimeters.of(0.0);
-        Distance horizontalSetpoint = Centimeters.of(0.0);
-
-        switch (choice) {
-            case Right -> {
-                switch (pose) {
-                    case BackL2 -> forwardSetPoint = getRightLLSetpoints().getFirst().minus(reefPosesForwardDeltas.backL2Delta());
-                    case BackL3 -> {}
-                    case BackL4 -> {}
-                }
-            }
-            case Left -> {
-                switch (pose) {
-                    case BackL2 -> {}
-                    case BackL3 -> {}
-                    case BackL4 -> {}
-                }
-            }
-            case Front -> {
-                switch (pose) {
-                    case FrontL4 -> {}
-                    case FrontL3 -> {}
-                    case FrontL2 -> {}
-                }
-            }
-        }
-
-        return new Pair<>(forwardSetPoint, horizontalSetpoint);
-    }
-
-    public Pair<Distance, Distance> chooseSetPoint(PoseCommands pose, LimeLightChoice choice) {
-        return chooseSetPoint(pose, choice);
-    }
-
     public Command alignRobotAllAxis(Supplier<LimeLightChoice> choice, Supplier<Pair<Distance, Distance>> setpoints) {
         return Commands.run(() -> {
             int id = getTargetId(choice.get());

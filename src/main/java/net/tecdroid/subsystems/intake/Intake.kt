@@ -16,6 +16,7 @@ import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.SendableBuilder
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
@@ -33,13 +34,14 @@ import kotlin.math.max
 /** Intake Subsystem. Please look for the functions with specific names (Coral or Algae).
  * [coralSensors] MUST have the following order:
  * Left Intake CANRange, Center Intake CANRange, Right Intake CANRange, Inner Intake CANRange */
-class Intake(isScoring: BooleanSupplier) : TdSubsystem("Intake"), LoggableSubsystem {
+class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), LoggableSubsystem {
     private val config = intakeConfig
     private val algaeMotorController = TalonFX(config.algaeMotorControllerId.id)
     private val coralRightMotorController = TalonFX(config.coralRightMotorControllerId.id)
     private val coralLeftMotorController = TalonFX(config.coralLeftMotorControllerId.id)
 
 
+    private val isClimbState = Trigger { isClimbStateActive.asBoolean }
     private val isHorizontallyDetected = Trigger { isHorizontallyDetected() }
     private val hasCoralTrigger = Trigger { hasCoral() }
     private val intakingCoralTrigger = Trigger { intakingCoral() } // 1st - 3rd CANRange, before fully inside
@@ -66,6 +68,10 @@ class Intake(isScoring: BooleanSupplier) : TdSubsystem("Intake"), LoggableSubsys
         configureCanRangesInterface()
 
 
+        isClimbState.whileTrue(SequentialCommandGroup(
+            Commands.run({ setCoralVoltage(0.0.volts) }),
+            Commands.run({ setAlgaeVoltage(0.0.volts) })
+        ))
         isHorizontallyDetected.and { DriverStation.isTeleop() }
             .onTrue(SequentialCommandGroup(
                 InstantCommand({ horizontalIntake(Pair(8.0.volts, 10.0.volts)) } ),
