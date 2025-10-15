@@ -46,26 +46,27 @@ val climberConfig = ClimberConfig(
     rollersMotorDirection = Clockwise,
 
     wristMotorControllerId = NumericId(61),
-    wristMotorDirection = Clockwise,
+    wristMotorDirection = Counterclockwise,
 
     motorsCurrentLimit = 40.0.amps,
 
     absoluteEncoderPort = NumericId(0),
     absoluteEncoderIsInverted = true,
-    absoluteEncoderOffset = (108.18).degrees,
+    absoluteEncoderOffset = (108.18).degrees + 33.33.degrees,
     absoluteEncoderBrand = ThroughBoreBrand.REV,
 
     reduction = Reduction(5.0 * 5.0 * 5.0),
 
     measureLimits = MeasureLimits(
-        absoluteMinimum = 32.0.degrees,
-        relativeMinimum = 33.37.degrees,
-        relativeMaximum = 140.23.degrees,
-        absoluteMaximum = 142.0.degrees,
+        absoluteMinimum = 0.0.degrees,
+        relativeMinimum = 0.1.degrees,
+        relativeMaximum = 113.0.degrees,
+        absoluteMaximum = 115.0.degrees,
     ),
 
     controlGains = ControlGains(
         p = 0.1,
+        d = 0.001,
         s = 0.11467,
         v = 0.11121,
         a = 0.0019705,

@@ -1,13 +1,17 @@
 package net.tecdroid.autonomous
 
+import com.pathplanner.lib.auto.AutoBuilder
 import com.pathplanner.lib.auto.NamedCommands
 import com.pathplanner.lib.commands.PathPlannerAuto
 import com.pathplanner.lib.config.PIDConstants
 import com.pathplanner.lib.config.RobotConfig
 import com.pathplanner.lib.controllers.PPHolonomicDriveController
 import com.pathplanner.lib.path.PathPlannerPath
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.DriverStation.Alliance
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
@@ -23,7 +27,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import java.io.IOException
 
 class PathPlannerAutonomous(val drive: Drive, private val llController: LimelightController, private val armSystem: ArmSystem) {
-    private val autoChooser = LoggedDashboardChooser<Command>("Auto Choices", drive.autoChooser)
+    //private val autoChooser = LoggedDashboardChooser<Command>("Auto Choices", drive.autoChooser)
+    private val autoChooser = SendableChooser<Command>()
 
     private val robotConfig: RobotConfig = try {
         RobotConfig.fromGUISettings()
@@ -35,11 +40,6 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         throw IOException(e)
     }
 
-    private val driveController = PPHolonomicDriveController(
-        PIDConstants(6.0, 0.0, 0.0),
-        PIDConstants(18.0, 0.0, 0.0)
-    )
-
     private fun registerNamedCommand(name: String, command: Command) {
         NamedCommands.registerCommand(name, command)
     }
@@ -48,24 +48,28 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         // Stop motors
         registerNamedCommand("StopMotors",
             drive.stopCommand())
+
         // Arm
-        registerNamedCommand("ArmCoralStationPose",
-            armSystem.setPoseAutoCommand(ArmPoses.CoralStation.pose, ArmOrders.EJW.order))
+        registerNamedCommand("ArmCoralStationPoseEJW",
+            armSystem.setPoseAutoCommand(ArmPoses.CoralStation, ArmOrders.EJW.order))
 
-        registerNamedCommand("ArmL4Pose",
-            armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order))
+        registerNamedCommand("ArmBackL4Pose",
+            armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order))
 
-        registerNamedCommand("ArmL3PoseWJE",
-        armSystem.setPoseAutoCommand(ArmPoses.BackL3.pose, ArmOrders.WEJ.order))
+        registerNamedCommand("ArmBackL3PoseWJE",
+        armSystem.setPoseAutoCommand(ArmPoses.BackL3, ArmOrders.WEJ.order))
 
-        registerNamedCommand("ArmL3PoseEWJ",
-            armSystem.setPoseAutoCommand(ArmPoses.BackL3.pose, ArmOrders.EWJ.order))
+        registerNamedCommand("ArmBackL3PoseEWJ",
+            armSystem.setPoseAutoCommand(ArmPoses.BackL3, ArmOrders.EWJ.order))
 
-        registerNamedCommand("ArmL2PoseWJE",
-            armSystem.setPoseAutoCommand(ArmPoses.BackL2.pose, ArmOrders.WJE.order))
+        registerNamedCommand("ArmBackL2PoseWJE",
+            armSystem.setPoseAutoCommand(ArmPoses.BackL2, ArmOrders.WJE.order))
 
-        registerNamedCommand("ArmL2PoseJEW",
-            armSystem.setPoseAutoCommand(ArmPoses.BackL2.pose, ArmOrders.JEW.order))
+        registerNamedCommand("ArmBackL2PoseJEW",
+            armSystem.setPoseAutoCommand(ArmPoses.BackL2, ArmOrders.JEW.order))
+
+        registerNamedCommand("FloorIntakePos",
+            armSystem.setPoseAutoCommand(ArmPoses.CoralFloorIntake, ArmOrders.EJW.order))
 
         // Intake
         registerNamedCommand("EnableIntakeUntilHasCoral",
@@ -83,9 +87,9 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         registerNamedCommand("AlignAndScoreRightBranch",
             Commands.sequence(
                 ParallelCommandGroup(
-                    llController.alignRobotAllAxis({ LimeLightChoice.Right }, { llController.rightLLSetpoints })
-                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.rightLLSetpoints) },
-                    armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
+                    llController.alignRobotAllAxis({ LimeLightChoice.Right }, { llController.getRightLLSetpoints(ArmPoses.BackL4) })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(ArmPoses.BackL4)) },
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
                 drive.stopCommand(),
 
@@ -100,9 +104,9 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                 ParallelCommandGroup(
                     llController.alignRobotAllAxis(
                         { LimeLightChoice.Left },
-                        { llController.leftLLSetpoints })
-                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.leftLLSetpoints) },
-                    armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
+                        { llController.getLeftLLSetpoints(ArmPoses.BackL4) })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getLeftLLSetpoints(ArmPoses.BackL4)) },
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
 
                 drive.stopCommand(),
@@ -112,38 +116,18 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                 Commands.waitTime(0.35.seconds),
                 armSystem.disableCoralIntake())
             )
-
-        registerNamedCommand("AlignAndScoreRightBranchIdFilter",
-            Commands.sequence(
-                Commands.runOnce({llController.setFilterIds(arrayOf(20, 19, 11, 6));}),
-                ParallelCommandGroup(
-                    llController.alignRobotAllAxis(
-                        { LimeLightChoice.Right },
-                        { llController.rightLLSetpoints })
-                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.rightLLSetpoints) },
-                    armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
-                ).withTimeout(2.5),
-
-                drive.stopCommand(),
-
-                Commands.runOnce({llController.setFilterIds(arrayOf(21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9));}),
-
-                armSystem.enableCoralIntake(),
-                Commands.waitUntil { !armSystem.intake.hasCoral() },
-                Commands.waitTime(0.35.seconds),
-                armSystem.disableCoralIntake())
-        )
     }
 
     private fun autoChooserOptions() {
         val tab = Shuffleboard.getTab("Driver Tab")
-        autoChooser.addDefaultOption("None", Commands.none())
+        autoChooser.setDefaultOption("None", Commands.none())
 
         autoChooser.addOption("Straight Forward", resetPoseAndGetPathFollowingCommand("Straightforward"))
+        autoChooser.addOption("C1-CD-bargeToReef", resetPoseAndGetPathFollowingCommand("C1-CD-bargeToReef"))
 
         // Complete autos
-        autoChooser.addOption("RightAuto", PathPlannerAuto("Right Auto"))
-        autoChooser.addOption("LeftAuto", PathPlannerAuto("Left Auto"))
+        //autoChooser.addOption("RightAuto", PathPlannerAuto("Right Auto"))
+        //autoChooser.addOption("LeftAuto", PathPlannerAuto("Left Auto"))
         //autoChooser.addOption("CenterAuto", PathPlannerAuto("Center Auto"))
         autoChooser.addOption("CenterAuto",
             Commands.sequence(
@@ -152,9 +136,9 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                 ParallelCommandGroup(
                     llController.alignRobotAllAxis(
                         { LimeLightChoice.Right },
-                        { llController.rightLLSetpoints })
-                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.rightLLSetpoints) },
-                    armSystem.setPoseAutoCommand(ArmPoses.BackL4.pose, ArmOrders.JEW.order),
+                        { llController.getRightLLSetpoints(ArmPoses.BackL4) })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(ArmPoses.BackL4)) },
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order),
                 ).withTimeout(2.5),
                 drive.stopCommand(),
 
@@ -164,10 +148,10 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
                 Commands.waitTime(0.35.seconds),
                 armSystem.disableCoralIntake(),
-                armSystem.setPoseAutoCommand(ArmPoses.BackL2.pose, ArmOrders.JEW.order)))
+                armSystem.setPoseAutoCommand(ArmPoses.BackL2, ArmOrders.JEW.order)))
 
-        tab.add("Autonomous Chooser", autoChooser.sendableChooser)
-        SmartDashboard.putData("Autonomous Chooser", autoChooser.sendableChooser)
+        tab.add("Autonomous Chooser", autoChooser)
+        SmartDashboard.putData(autoChooser)
     }
 
     init {
@@ -175,23 +159,24 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
 
         // Instead I used AutoBuilder inside Drive. Should see why configuring it here gives me an error,
         // I suspect is due to Java - Kotlin interaction failing.
-//        AutoBuilder.configure(
-//            drive.pose,
-//            drive.pose,
-//            drive.chassisSpeeds,
-//            {speeds: ChassisSpeeds -> drive.runVelocity(speeds)},
-//            driveController,
-//            robotConfig,
-//            { if (alliance.isPresent) { alliance.get() == Alliance.Red } else false },
-//            drive
-//        )
+        AutoBuilder.configure(
+            drive::getPose,
+            drive::setPose,
+            drive::getChassisSpeeds,
+            {speeds: ChassisSpeeds -> drive.runVelocity(speeds)},
+            PPHolonomicDriveController(
+                PIDConstants(0.5, 0.0, 0.0), PIDConstants(0.8, 0.0, 0.0)),
+            robotConfig,
+            { if (alliance.isPresent) { alliance.get() == Alliance.Red } else false },
+            drive
+        )
 
         namedCommandsInit()
         autoChooserOptions()
     }
 
     val selectedAutonomousRoutine: Command
-        get() = if (autoChooser.get() != null) autoChooser.get() else Commands.none()
+        get() = autoChooser.selected ?: Commands.print("No auto found :(")
 
     fun getPath(name: String): PathPlannerPath = try {
         PathPlannerPath.fromPathFile(name)
@@ -202,7 +187,8 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
 
 
     fun getPathFollowingCommand(name: String): Command = drive.followTrajectory(getPath(name))
-    fun getPathFollowingCommand(path: PathPlannerPath): Command = drive.followTrajectory(path)
+    //fun getPathFollowingCommand(path: PathPlannerPath): Command = drive.followTrajectory(path)
+    fun getPathFollowingCommand(path: PathPlannerPath): Command = AutoBuilder.followPath(path)
 
     fun resetPoseAndGetPathFollowingCommand(name: String) : Command {
         val path = getPath(name)

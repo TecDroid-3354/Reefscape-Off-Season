@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.button.Trigger
+import net.tecdroid.autonomous.PathPlannerAutonomous
 import net.tecdroid.commands.DriveCommands
 import net.tecdroid.constants.SwerveTunerConstants
 import net.tecdroid.subsystems.drivetrain.Drive
@@ -54,6 +55,7 @@ class RobotContainer {
     private val xLimelightToAprilTagSetPoint = 0.315
     private val yLimelightToAprilTagSetPoint = 0.035
     private val visionStdDev = VecBuilder.fill(.5, .5, .2)
+    private val pathPlannerAutonomous: PathPlannerAutonomous
 
     private var autoLevelSelectorMode = true
 
@@ -103,12 +105,12 @@ class RobotContainer {
 
         swerveRotationLockSystem = SwerveRotationLockSystem(drive, controller)
         reefAppListener = ReefAppListener(llController)
-        //pathPlannerAutonomous = PathPlannerAutonomous(drive, limelightController, arm)
+        pathPlannerAutonomous = PathPlannerAutonomous(drive, llController, arm)
     }
 
 
     fun autonomousInit() {
-        //swerve.removeDefaultCommand()
+        drive.removeDefaultCommand()
     }
 
     fun disableInit() {
@@ -132,14 +134,8 @@ class RobotContainer {
 //        controller.x().onTrue(arm.setPoseCommand(ArmPoses.CoralFloorIntakeSafe.pose, ArmOrders.JEW.order))
 //        controller.y().onTrue(arm.setPoseCommand(ArmPoses.BackL2.pose, ArmOrders.JEW.order))
 
-        // ! Analog climber
-        controller.povUp().onTrue(InstantCommand({ arm.climber.setVoltage(8.0.volts) }))
-            .onFalse(InstantCommand({ arm.climber.setVoltage(0.0.volts) }))
-
-        controller.povDown().onTrue(InstantCommand({ arm.climber.setVoltage(-8.0.volts) }))
-            .onFalse(InstantCommand({ arm.climber.setVoltage(0.0.volts) }))
-
         controller.povRight().onTrue(InstantCommand({ arm.setPoseCommand(PoseCommands.CoralStation.pose, ArmOrders.JEW.order) }))
+
 
 
         // Reset gyro to 0° when Start button is pressed
@@ -160,9 +156,9 @@ class RobotContainer {
             DoubleSupplier { controller.getRightX() * 0.6 })
 
         controller.rightTrigger().whileTrue(llController
-            .alignRobotAllAxis({ llController.getLimelight(BranchSide.Right) }) { llController.rightLLSetpoints })
+            .alignRobotAllAxis({ llController.getLimelight(BranchSide.Right) }) { llController.getRightLLSetpoints(arm.currentPose) })
         controller.leftTrigger().whileTrue(llController
-            .alignRobotAllAxis({ llController.getLimelight(BranchSide.Left) }) { llController.leftLLSetpoints })
+            .alignRobotAllAxis({ llController.getLimelight(BranchSide.Left) }) { llController.getLeftLLSetpoints(arm.currentPose) })
 
         // Auto Level Selector
 
@@ -198,18 +194,18 @@ class RobotContainer {
 
     fun limeLightIsAtSetPoint(limeLightChoice: LimeLightChoice): Boolean {
         return when (limeLightChoice) {
-            Right -> llController.isAtSetPoint(Right, llController.rightLLSetpoints)
-            Left -> llController.isAtSetPoint(Left, llController.leftLLSetpoints)
-            Front -> llController.isAtSetPoint(Front, llController.rightLLSetpoints) ||
-                    llController.isAtSetPoint(Front, llController.leftLLSetpoints)
+            Right -> llController.isAtSetPoint(Right, llController.getRightLLSetpoints(arm.currentPose))
+            Left -> llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(arm.currentPose))
+            Front -> llController.isAtSetPoint(Front, llController.getRightLLSetpoints(arm.currentPose)) ||
+                    llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(arm.currentPose))
         }
     }
 
     fun limeLightIsAtSetPoint(tolerance: Distance): Boolean {
-         return llController.isAtSetPoint(Front, llController.rightLLSetpoints, tolerance) ||
-                llController.isAtSetPoint(Front, llController.leftLLSetpoints, tolerance) ||
-                llController.isAtSetPoint(Right, llController.rightLLSetpoints, tolerance) ||
-                llController.isAtSetPoint(Left, llController.leftLLSetpoints, tolerance)
+         return llController.isAtSetPoint(Front, llController.getRightLLSetpoints(arm.currentPose), tolerance) ||
+                llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(arm.currentPose), tolerance) ||
+                llController.isAtSetPoint(Right, llController.getRightLLSetpoints(arm.currentPose), tolerance) ||
+                llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(arm.currentPose), tolerance)
     }
 
 
@@ -243,6 +239,6 @@ class RobotContainer {
     }
 
     val autonomousCommand: Command
-        get() = Commands.none()//pathPlannerAutonomous.selectedAutonomousRoutine
+        get() = pathPlannerAutonomous.selectedAutonomousRoutine
 
 }
