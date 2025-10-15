@@ -11,6 +11,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.DriverStation.Alliance
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
@@ -26,7 +27,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import java.io.IOException
 
 class PathPlannerAutonomous(val drive: Drive, private val llController: LimelightController, private val armSystem: ArmSystem) {
-    private val autoChooser = LoggedDashboardChooser<Command>("Auto Choices", drive.autoChooser)
+    //private val autoChooser = LoggedDashboardChooser<Command>("Auto Choices", drive.autoChooser)
+    private val autoChooser = SendableChooser<Command>()
 
     private val robotConfig: RobotConfig = try {
         RobotConfig.fromGUISettings()
@@ -37,11 +39,6 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         )
         throw IOException(e)
     }
-
-    private val driveController = PPHolonomicDriveController(
-        PIDConstants(6.0, 0.0, 0.0),
-        PIDConstants(18.0, 0.0, 0.0)
-    )
 
     private fun registerNamedCommand(name: String, command: Command) {
         NamedCommands.registerCommand(name, command)
@@ -123,14 +120,14 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
 
     private fun autoChooserOptions() {
         val tab = Shuffleboard.getTab("Driver Tab")
-        autoChooser.addDefaultOption("None", Commands.none())
+        autoChooser.setDefaultOption("None", Commands.none())
 
         autoChooser.addOption("Straight Forward", resetPoseAndGetPathFollowingCommand("Straightforward"))
         autoChooser.addOption("C1-CD-bargeToReef", resetPoseAndGetPathFollowingCommand("C1-CD-bargeToReef"))
 
         // Complete autos
-        autoChooser.addOption("RightAuto", PathPlannerAuto("Right Auto"))
-        autoChooser.addOption("LeftAuto", PathPlannerAuto("Left Auto"))
+        //autoChooser.addOption("RightAuto", PathPlannerAuto("Right Auto"))
+        //autoChooser.addOption("LeftAuto", PathPlannerAuto("Left Auto"))
         //autoChooser.addOption("CenterAuto", PathPlannerAuto("Center Auto"))
         autoChooser.addOption("CenterAuto",
             Commands.sequence(
@@ -153,8 +150,8 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                 armSystem.disableCoralIntake(),
                 armSystem.setPoseAutoCommand(ArmPoses.BackL2, ArmOrders.JEW.order)))
 
-        tab.add("Autonomous Chooser", autoChooser.sendableChooser)
-        SmartDashboard.putData("Autonomous Chooser", autoChooser.sendableChooser)
+        tab.add("Autonomous Chooser", autoChooser)
+        SmartDashboard.putData(autoChooser)
     }
 
     init {
@@ -162,23 +159,24 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
 
         // Instead I used AutoBuilder inside Drive. Should see why configuring it here gives me an error,
         // I suspect is due to Java - Kotlin interaction failing.
-        /*AutoBuilder.configure(
+        AutoBuilder.configure(
             drive::getPose,
             drive::setPose,
-            drive::chassisSpeeds,
+            drive::getChassisSpeeds,
             {speeds: ChassisSpeeds -> drive.runVelocity(speeds)},
-            driveController,
+            PPHolonomicDriveController(
+                PIDConstants(0.5, 0.0, 0.0), PIDConstants(0.8, 0.0, 0.0)),
             robotConfig,
             { if (alliance.isPresent) { alliance.get() == Alliance.Red } else false },
             drive
-        )*/
+        )
 
         namedCommandsInit()
         autoChooserOptions()
     }
 
     val selectedAutonomousRoutine: Command
-        get() = if (autoChooser.get() != null) autoChooser.get() else Commands.none()
+        get() = autoChooser.selected ?: Commands.print("No auto found :(")
 
     fun getPath(name: String): PathPlannerPath = try {
         PathPlannerPath.fromPathFile(name)
@@ -189,7 +187,8 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
 
 
     fun getPathFollowingCommand(name: String): Command = drive.followTrajectory(getPath(name))
-    fun getPathFollowingCommand(path: PathPlannerPath): Command = drive.followTrajectory(path)
+    //fun getPathFollowingCommand(path: PathPlannerPath): Command = drive.followTrajectory(path)
+    fun getPathFollowingCommand(path: PathPlannerPath): Command = AutoBuilder.followPath(path)
 
     fun resetPoseAndGetPathFollowingCommand(name: String) : Command {
         val path = getPath(name)

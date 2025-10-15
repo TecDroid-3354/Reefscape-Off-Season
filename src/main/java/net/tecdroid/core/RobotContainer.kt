@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.button.Trigger
+import net.tecdroid.autonomous.PathPlannerAutonomous
 import net.tecdroid.commands.DriveCommands
 import net.tecdroid.constants.SwerveTunerConstants
 import net.tecdroid.subsystems.drivetrain.Drive
@@ -54,6 +55,7 @@ class RobotContainer {
     private val xLimelightToAprilTagSetPoint = 0.315
     private val yLimelightToAprilTagSetPoint = 0.035
     private val visionStdDev = VecBuilder.fill(.5, .5, .2)
+    private val pathPlannerAutonomous: PathPlannerAutonomous
 
     private var autoLevelSelectorMode = true
 
@@ -103,12 +105,12 @@ class RobotContainer {
 
         swerveRotationLockSystem = SwerveRotationLockSystem(drive, controller)
         reefAppListener = ReefAppListener(llController)
-        //pathPlannerAutonomous = PathPlannerAutonomous(drive, limelightController, arm)
+        pathPlannerAutonomous = PathPlannerAutonomous(drive, llController, arm)
     }
 
 
     fun autonomousInit() {
-        //swerve.removeDefaultCommand()
+        drive.removeDefaultCommand()
     }
 
     fun disableInit() {
@@ -237,6 +239,6 @@ class RobotContainer {
     }
 
     val autonomousCommand: Command
-        get() = Commands.none()//pathPlannerAutonomous.selectedAutonomousRoutine
+        get() = pathPlannerAutonomous.selectedAutonomousRoutine
 
 }

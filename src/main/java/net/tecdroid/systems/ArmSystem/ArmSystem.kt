@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
+import edu.wpi.first.wpilibj2.command.ScheduleCommand
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand
@@ -101,12 +102,22 @@ enum class ArmPoses(var pose: ArmPose) {
 
     BackL2(
         ArmPose(
-            wristPosition           = 220.0.degrees - 90.0.degrees,
+            wristPosition           = 130.0.degrees,
             elevatorDisplacement    = 0.0.inches,
             elevatorJointPosition   = 90.0.degrees,
             targetCoralVoltage      = 8.0.volts,
             targetAlgaeVoltage      = 8.0.volts
     )
+    ),
+
+    BackL2Safe(
+        ArmPose(
+            wristPosition           = 100.0.degrees,
+            elevatorDisplacement    = 0.0.inches,
+            elevatorJointPosition   = 90.0.degrees,
+            targetCoralVoltage      = 8.0.volts,
+            targetAlgaeVoltage      = 8.0.volts
+        )
     ),
 
     BackL3(
@@ -122,7 +133,7 @@ enum class ArmPoses(var pose: ArmPose) {
     BackL4(
         ArmPose(
             wristPosition           = 220.0.degrees - 90.0.degrees,
-            elevatorDisplacement    = 39.8.inches,
+            elevatorDisplacement    = 40.3.inches,
             elevatorJointPosition   = 90.0.degrees,
             targetCoralVoltage      = 8.0.volts,
             targetAlgaeVoltage      = 8.0.volts
@@ -290,19 +301,37 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
     }
 
     fun setPoseCommand(pose: ArmPoses, order: ArmOrder) : Command {
-        return SequentialCommandGroup(
-            Commands.runOnce({
-                currentPose = pose
-                coralTargetVoltage = pose.pose.targetCoralVoltage
-                algaeTargetVoltage = pose.pose.targetAlgaeVoltage
-                isScoring = when (pose) {
-                    ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> true
-                    else -> false
-                }
-            }),
-            getCommandFor(pose.pose, order.first),
-            getCommandFor(pose.pose, order.second),
-            getCommandFor(pose.pose, order.third))
+        return when(currentPose) {
+            // When is in BackL2 to prevent the wires from colliding
+            ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> SequentialCommandGroup(
+                getCommandFor(ArmPoses.BackL2Safe.pose, ArmOrders.WEJ.order.first),
+                Commands.runOnce({
+                    currentPose = pose
+                    coralTargetVoltage = pose.pose.targetCoralVoltage
+                    algaeTargetVoltage = pose.pose.targetAlgaeVoltage
+                    isScoring = when (pose) {
+                        ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> true
+                        else -> false
+                    }
+                }),
+                getCommandFor(pose.pose, order.first),
+                getCommandFor(pose.pose, order.second),
+                getCommandFor(pose.pose, order.third))
+            // rest of cases
+            else -> SequentialCommandGroup(
+                Commands.runOnce({
+                    currentPose = pose
+                    coralTargetVoltage = pose.pose.targetCoralVoltage
+                    algaeTargetVoltage = pose.pose.targetAlgaeVoltage
+                    isScoring = when (pose) {
+                        ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> true
+                        else -> false
+                    }
+                }),
+                getCommandFor(pose.pose, order.first),
+                getCommandFor(pose.pose, order.second),
+                getCommandFor(pose.pose, order.third))
+        }
     }
 
     fun setPoseCommand(pose: ArmPoses, order: ArmOrder, slot: Int) : Command {
@@ -493,7 +522,6 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                     //WaitUntilCommand { limeLightIsAtSetPoint(0.13.meters) }.andThen(
                         //scoringSequence(PoseCommands.BackL3))
 
-
                 States.CoralState -> setPoseCommand(PoseCommands.BackL3)
                 States.IntakeState -> setPoseCommand(PoseCommands.BackL3)
                     .andThen({stateMachine.changeState(States.CoralState)})
@@ -520,8 +548,10 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                     //WaitUntilCommand { limeLightIsAtSetPoint(0.25.meters) }.andThen(
                     //scoringSequence(PoseCommands.BackL2))
 
-                States.CoralState -> setPoseCommand(PoseCommands.BackL2)
-                States.IntakeState -> setPoseCommand(PoseCommands.BackL2)
+                States.CoralState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
+                    .andThen(setPoseCommand(PoseCommands.BackL2))
+                States.IntakeState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
+                    .andThen(setPoseCommand(PoseCommands.BackL2))
                     .andThen({stateMachine.changeState(States.CoralState)})
                 States.AlgaeState -> Commands.none()//Commands.sequence(
 //                    enableAlgaeIntake(2.0.volts),

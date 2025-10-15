@@ -129,26 +129,26 @@ public class Drive extends SubsystemBase {
     PhoenixOdometryThread.getInstance().start();
 
     // Configure AutoBuilder for PathPlanner
-    AutoBuilder.configure(
-        this::getPose,
-        this::setPose,
-        this::getChassisSpeeds,
-        this::runVelocity,
-        new PPHolonomicDriveController(
-            new PIDConstants(6.0, 0.0, 0.0), new PIDConstants(18.0, 0.0, 0.0)),
-        PP_CONFIG,
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        this);
-    Pathfinding.setPathfinder(new LocalADStarAK());
-    PathPlannerLogging.setLogActivePathCallback(
-        (activePath) -> {
-          Logger.recordOutput(
-              "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
-        });
-    PathPlannerLogging.setLogTargetPoseCallback(
-        (targetPose) -> {
-          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
-        });
+//    AutoBuilder.configure(
+//        this::getPose,
+//        this::setPose,
+//        this::getChassisSpeeds,
+//        this::runVelocity,
+//        new PPHolonomicDriveController(
+//            new PIDConstants(6.0, 0.0, 0.0), new PIDConstants(18.0, 0.0, 0.0)),
+//        PP_CONFIG,
+//        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+//        this);
+//    Pathfinding.setPathfinder(new LocalADStarAK());
+//    PathPlannerLogging.setLogActivePathCallback(
+//        (activePath) -> {
+//          Logger.recordOutput(
+//              "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
+//        });
+//    PathPlannerLogging.setLogTargetPoseCallback(
+//        (targetPose) -> {
+//          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+//        });
 
     // Configure SysId
     sysId =

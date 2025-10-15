@@ -46,6 +46,7 @@ class Climber :
     override val forwardsRunningCondition  = { angle < config.measureLimits.relativeMaximum }
     override val backwardsRunningCondition = { angle > config.measureLimits.relativeMinimum }
 
+
     init {
         configureMotorInterface()
         matchRelativeEncodersToAbsoluteEncoders()
@@ -83,6 +84,8 @@ class Climber :
 
         target = transformedAngle
         wristController.setControl(request)
+
+        //Trigger(forwardsRunningCondition.invoke().not() || backwardsRunningCondition.invoke().not()).onTrue(setVoltage())
     }
 
     /**

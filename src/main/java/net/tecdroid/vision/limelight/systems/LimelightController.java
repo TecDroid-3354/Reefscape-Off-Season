@@ -45,9 +45,9 @@ public class LimelightController {
     private final LimelightAprilTagDetector frontLimelight = new LimelightAprilTagDetector(new LimelightConfig(StringConstantsKt.frontLimelightName, new Pose3d()));
 
     /** Setpoints for the back left camera as follows: Pair<FrontalDistance, HorizontalDistance(As closer to zero, distance will increase)> */
-    private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(31.5), Centimeters.of(2.5));
+    private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(32.5), Centimeters.of(2.5));
     /** Setpoints for the back right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(66.5), Centimeters.of(-2.7));
+    private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(32.5), Centimeters.of(-2.7));
     /** Setpoints for the front left camera as follows: Pair<FrontalDistance, HorizontalDistance> */
     private final Pair<Distance, Distance> frontLeftLLSetpoints = new Pair<>(Centimeters.of(66.5), Centimeters.of(-2.5));
     /** Setpoints for the front right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
