@@ -4,6 +4,8 @@ import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import edu.wpi.first.wpilibj2.command.WaitCommand
+import net.tecdroid.util.milliseconds
 import net.tecdroid.util.stateMachine.builders.ConditionBuilder
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultDirectedGraph
@@ -12,7 +14,7 @@ import net.tecdroid.util.stateMachine.builders.ConditionBuilder.Condition
 
 
 enum class States(var config: StateConfig) {
-    CoralState(StateConfig()),
+    MarcoState(StateConfig()),
     AlgaeState(StateConfig()),
     ScoreState(StateConfig()),
     IntakeState(StateConfig()),
@@ -84,6 +86,7 @@ class StateMachine(private var currentState: States) : SubsystemBase() {
 
         defaultCommand = initialDefaultCommand
 
+        WaitCommand(0.15.milliseconds).schedule()
         currentState.config.initialCommand.schedule()
     }
 
@@ -124,6 +127,8 @@ class StateMachine(private var currentState: States) : SubsystemBase() {
 
             // execute end command
             currentState.config.endCommand.schedule()
+
+            WaitCommand(0.15.milliseconds).schedule()
 
             // execute the initial command of the new state
             targetState.config.initialCommand.schedule()

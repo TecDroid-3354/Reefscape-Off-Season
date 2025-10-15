@@ -2,7 +2,6 @@
 
 package net.tecdroid.systems.ArmSystem
 
-import edu.wpi.first.hal.FRCNetComm
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
@@ -11,11 +10,9 @@ import edu.wpi.first.util.sendable.Sendable
 import edu.wpi.first.util.sendable.SendableBuilder
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
-import edu.wpi.first.wpilibj2.command.ScheduleCommand
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand
@@ -260,6 +257,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
     val climbTrigger = Trigger{ controller.leftStick().asBoolean && controller.rightStick().asBoolean && hasCoral().not() }
 
     var currentPose = ArmPoses.Passive
+    var targetPose = ArmPoses.BackL2
 
     // To change the position orders according to the position of the entire arm
     private var isLow = { false }
@@ -398,13 +396,19 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         }))
     }
 
+    fun scoringSequence(pose: ArmPoses, order: ArmOrder): Command {
+        return setPoseCommand(pose, order).andThen(WaitCommand(0.2.seconds)).andThen(Commands.runOnce({
+            scheduleCMD(ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
+        }))
+    }
+
     fun scoringSequence(pose: () -> PoseCommands): Command {
         return setPoseCommand(pose.invoke()).andThen(WaitCommand(0.15.seconds)).andThen(enableCoralOuttake())
     }
 
     fun changeState() {
         when(stateMachine.getCurrentState()) {
-            States.AlgaeState -> stateMachine.changeState(States.CoralState)
+            States.AlgaeState -> stateMachine.changeState(States.MarcoState)
             else -> stateMachine.changeState(States.AlgaeState)
         }
     }
@@ -418,8 +422,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // Active passive intake
         States.AlgaeState.setInitialCommand(intake.setAlgaeVoltageCommand(1.5.volts))
 
-        States.ScoreState.setInitialCommand(InstantCommand({ CommandScheduler.getInstance().clearComposedCommands()})
-            .andThen(setPoseCommand(PoseCommands.Passive)))
+        States.ScoreState.setInitialCommand(setPoseCommand(PoseCommands.Passive))
+
 
         // Go to passive position after score a coral
         States.ScoreState.setEndCommand(SequentialCommandGroup(
@@ -449,9 +453,10 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
 
         // Change to score state when coral is detected
         stateMachine.addCondition({ hasCoral() }, States.ScoreState, Phase.Teleop)
+            .andThen(setPoseCommand(PoseCommands.Passive))
 
         // Change to coral state if we are in score state, and we just pull out a coral
-        stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !hasCoral() }, States.CoralState, Phase.Teleop)
+        stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !hasCoral() }, States.MarcoState, Phase.Teleop)
 
     }
 
@@ -484,17 +489,23 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         controller.y().onTrue(
             Commands.runOnce({
                 scheduleCMD(when(stateMachine.getCurrentState()){
-                    States.ScoreState -> Commands.either (
+                    /*States.ScoreState -> Commands.either (
                         scoringSequence(PoseCommands.BackL4),
                         setPoseCommand(PoseCommands.BackL4),
+                        { limeLightIsAtSetPoint(0.415.meters) }
+                    )*/
+
+                    States.ScoreState -> Commands.either (
+                        scoringSequence(PoseCommands.BackL4),
+                        Commands.runOnce({ targetPose = ArmPoses.BackL4 }),
                         { limeLightIsAtSetPoint(0.415.meters) }
                     )
                         //WaitUntilCommand { limeLightIsAtSetPoint(0.1.meters) }.andThen(
                         //scoringSequence(PoseCommands.BackL4))
 
-                    States.CoralState -> setPoseCommand(PoseCommands.BackL4)
+                    States.MarcoState -> setPoseCommand(PoseCommands.BackL4)
                     States.IntakeState -> setPoseCommand(PoseCommands.BackL4)
-                        .andThen({stateMachine.changeState(States.CoralState)})
+                        .andThen({stateMachine.changeState(States.MarcoState)})
                     States.AlgaeState -> Commands.none()//Commands.sequence(
 //                        enableAlgaeIntake(2.0.volts),
 //                        setPoseCommand(
@@ -513,18 +524,25 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // B
         controller.b().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.ScoreState -> Commands.either (
+                /*States.ScoreState -> Commands.either (
                     scoringSequence(PoseCommands.BackL3),
                     setPoseCommand(PoseCommands.BackL3),
+                    { limeLightIsAtSetPoint(0.445.meters) }
+                )*/
+
+                //States.ScoreState -> Commands.waitUntil { limeLightIsAtSetPoint(0.445.meters) }.andThen(scoringSequence(PoseCommands.BackL3))
+                States.ScoreState -> Commands.either (
+                    scoringSequence(PoseCommands.BackL3),
+                    Commands.runOnce({ targetPose = ArmPoses.BackL3 }),
                     { limeLightIsAtSetPoint(0.445.meters) }
                 )
 
                     //WaitUntilCommand { limeLightIsAtSetPoint(0.13.meters) }.andThen(
                         //scoringSequence(PoseCommands.BackL3))
 
-                States.CoralState -> setPoseCommand(PoseCommands.BackL3)
+                States.MarcoState -> setPoseCommand(PoseCommands.BackL3)
                 States.IntakeState -> setPoseCommand(PoseCommands.BackL3)
-                    .andThen({stateMachine.changeState(States.CoralState)})
+                    .andThen({stateMachine.changeState(States.MarcoState)})
                 States.AlgaeState -> Commands.none()//Commands.sequence(
 //                    enableAlgaeIntake(2.0.volts),
 //                    setPoseCommand(
@@ -540,19 +558,24 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // A
         controller.a().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.ScoreState -> Commands.either (
+                /*States.ScoreState -> Commands.either (
                     scoringSequence(PoseCommands.BackL2),
                     setPoseCommand(PoseCommands.BackL2),
+                    { limeLightIsAtSetPoint((-0.145).meters) }
+                )*/
+                States.ScoreState -> Commands.either (
+                    scoringSequence(PoseCommands.BackL2),
+                    Commands.runOnce({ targetPose = ArmPoses.BackL2 }),
                     { limeLightIsAtSetPoint((-0.145).meters) }
                 )
                     //WaitUntilCommand { limeLightIsAtSetPoint(0.25.meters) }.andThen(
                     //scoringSequence(PoseCommands.BackL2))
 
-                States.CoralState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
+                States.MarcoState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
                     .andThen(setPoseCommand(PoseCommands.BackL2))
                 States.IntakeState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
                     .andThen(setPoseCommand(PoseCommands.BackL2))
-                    .andThen({stateMachine.changeState(States.CoralState)})
+                    .andThen({stateMachine.changeState(States.MarcoState)})
                 States.AlgaeState -> Commands.none()//Commands.sequence(
 //                    enableAlgaeIntake(2.0.volts),
 //                    setPoseCommand(
@@ -568,12 +591,12 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // X
         controller.x().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.CoralState -> setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order)
-                    .andThen({ setIsLow(true) })
-                    .andThen(Commands.runOnce({ stateMachine.changeState(States.IntakeState)}))
+                States.MarcoState -> SequentialCommandGroup(
+                    Commands.runOnce({ stateMachine.changeState(States.IntakeState)}),
+                    setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order)
+                )
 
                 States.IntakeState, States.ScoreState -> setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order)
-                    .andThen({ setIsLow(true) })
 
                 States.AlgaeState -> Commands.sequence(
                     setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order),
@@ -680,11 +703,17 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // POV up
         //controller.povUp().onTrue(setPoseCommand(PoseCommands.Passive))
 
-        controller.leftBumper().onTrue(Commands.runOnce({
+        /*controller.leftBumper().onTrue(Commands.runOnce({
             scheduleCMD(ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
             })
         )
-            .onFalse(Commands.runOnce({scheduleCMD(ParallelCommandGroup(disableCoralIntake(), disableAlgaeIntake()))}))
+            .onFalse(Commands.runOnce({scheduleCMD(ParallelCommandGroup(disableCoralIntake(), disableAlgaeIntake()))}))*/
+        controller.leftBumper()
+            .onTrue(Commands.runOnce({scheduleCMD(when (stateMachine.getCurrentState()) {
+                States.ScoreState -> scoringSequence(targetPose, ArmOrders.JEW.order)
+
+                else -> Commands.none()
+            })}))
     }
 
 }

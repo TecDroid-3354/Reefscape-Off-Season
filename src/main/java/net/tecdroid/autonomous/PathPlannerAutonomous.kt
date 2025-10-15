@@ -165,7 +165,7 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
             drive::getChassisSpeeds,
             {speeds: ChassisSpeeds -> drive.runVelocity(speeds)},
             PPHolonomicDriveController(
-                PIDConstants(0.5, 0.0, 0.0), PIDConstants(0.8, 0.0, 0.0)),
+                PIDConstants(0.4, 0.0, 0.01), PIDConstants(0.2, 0.0, 0.1)),
             robotConfig,
             { if (alliance.isPresent) { alliance.get() == Alliance.Red } else false },
             drive
