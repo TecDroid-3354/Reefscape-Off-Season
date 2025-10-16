@@ -41,7 +41,7 @@ class RobotContainer {
     private val controller = CompliantXboxController(driverControllerId)
     private var drive: Drive
     private val stateMachine = StateMachine(States.MarcoState)
-    private val arm = ArmSystem(stateMachine, ::isLimelightFront, ::limeLightIsAtSetPoint, controller)
+    private val arm = ArmSystem(stateMachine, ::limeLightIsAtSetPoint, controller)
     private val llController: LimelightController
     //private val pathPlannerAutonomous: PathPlannerAutonomous
     private val swerveRotationLockSystem: SwerveRotationLockSystem
@@ -93,7 +93,7 @@ class RobotContainer {
         llController = LimelightController(
             drive,
             { chassisSpeeds -> drive.runVelocity(chassisSpeeds) },
-            { drive.rotation.degrees }, drive.maxSwerveSpeeds.times(0.75))
+            { drive.rotation.degrees }, drive.maxSwerveSpeeds.times(0.35))
         llController.shuffleboardData()
         arm.publishShuffleBoardData()
         arm.assignCommands()
@@ -108,6 +108,7 @@ class RobotContainer {
 
 
     fun autonomousInit() {
+        llController.setThrottle(0)
         drive.removeDefaultCommand()
     }
 
@@ -154,9 +155,9 @@ class RobotContainer {
             DoubleSupplier { controller.getRightX() * 0.6 })
 
         controller.rightTrigger().whileTrue(llController
-            .alignRobotAllAxis({ llController.getLimelight(BranchSide.Right) }) { llController.getRightLLSetpoints(arm.targetPose) })
+            .alignRobotAllAxis({ Right }) { llController.getRightLLSetpoints(arm.targetPose) })
         controller.leftTrigger().whileTrue(llController
-            .alignRobotAllAxis({ llController.getLimelight(BranchSide.Left) }) { llController.getLeftLLSetpoints(arm.targetPose) })
+            .alignRobotAllAxis({ Left }) { llController.getLeftLLSetpoints(arm.targetPose) })
 
         // Auto Level Selector
 
@@ -190,10 +191,6 @@ class RobotContainer {
         robotPosePublisher.set(drive.pose)
     }
 
-    fun isLimelightFront(): Boolean {
-        return llController.isFront
-    }
-
     fun limeLightIsAtSetPoint(limeLightChoice: LimeLightChoice): Boolean {
         return when (limeLightChoice) {
             Right -> llController.isAtSetPoint(Right, llController.getRightLLSetpoints(arm.currentPose))
@@ -222,10 +219,10 @@ class RobotContainer {
         advantageScopeLogs()
 
 //        try {
-//            if (limelightController.hasTarget(LimeLightChoice.Left)) {
+//            if (llController.hasTarget(LimeLightChoice.Left)) {
 //                drive.addVisionMeasurement(
-//                    limelightController.getRobotPoseEstimate(LimeLightChoice.Left).pose,
-//                    limelightController.getRobotPoseEstimate(LimeLightChoice.Left).timestampSeconds,
+//                    llController.getRobotPoseEstimate(LimeLightChoice.Left).pose,
+//                    llController.getRobotPoseEstimate(LimeLightChoice.Left).timestampSeconds,
 //                    visionStdDev
 //                )
 //            }
@@ -234,10 +231,10 @@ class RobotContainer {
 //        }
 //
 //        try {
-//            if (limelightController.hasTarget(LimeLightChoice.Right)) {
+//            if (llController.hasTarget(LimeLightChoice.Right)) {
 //                drive.addVisionMeasurement(
-//                    limelightController.getRobotPoseEstimate(LimeLightChoice.Right).pose,
-//                    limelightController.getRobotPoseEstimate(LimeLightChoice.Right).timestampSeconds,
+//                    llController.getRobotPoseEstimate(LimeLightChoice.Right).pose,
+//                    llController.getRobotPoseEstimate(LimeLightChoice.Right).timestampSeconds,
 //                    visionStdDev
 //                )
 //            }

@@ -43,7 +43,8 @@ object Constants {
     @JvmField
     val isFlipped: () -> Boolean =
         {
-            DriverStation.getAlliance().isPresent
-                    && DriverStation.getAlliance().get() == Alliance.Red
+            /*DriverStation.getAlliance().isPresent
+                    && DriverStation.getAlliance().get() == Alliance.Red*/
+            true
         }
 }

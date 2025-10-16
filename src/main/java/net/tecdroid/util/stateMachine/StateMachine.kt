@@ -16,8 +16,7 @@ import net.tecdroid.util.stateMachine.builders.ConditionBuilder.Condition
 enum class States(var config: StateConfig) {
     MarcoState(StateConfig()),
     AlgaeState(StateConfig()),
-    BackScoreState(StateConfig()),
-    FrontScoreState(StateConfig()),
+    ScoreState(StateConfig()),
     IntakeState(StateConfig()),
     ClimbState(StateConfig());
 

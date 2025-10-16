@@ -7,23 +7,27 @@ import com.pathplanner.lib.config.PIDConstants
 import com.pathplanner.lib.config.RobotConfig
 import com.pathplanner.lib.controllers.PPHolonomicDriveController
 import com.pathplanner.lib.path.PathPlannerPath
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.Pair
+import edu.wpi.first.math.kinematics.ChassisSpeeds
+import edu.wpi.first.units.Units
 import edu.wpi.first.wpilibj.DriverStation
-import edu.wpi.first.wpilibj.DriverStation.Alliance
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.InstantCommand
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand
 import net.tecdroid.subsystems.drivetrain.Drive
 import net.tecdroid.systems.ArmSystem.ArmOrders
 import net.tecdroid.systems.ArmSystem.ArmPoses
 import net.tecdroid.systems.ArmSystem.ArmSystem
+import net.tecdroid.systems.ArmSystem.BranchSide
+import net.tecdroid.util.meters
 import net.tecdroid.util.seconds
 import net.tecdroid.vision.limelight.systems.LimeLightChoice
 import net.tecdroid.vision.limelight.systems.LimelightController
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import java.io.IOException
 
 class PathPlannerAutonomous(val drive: Drive, private val llController: LimelightController, private val armSystem: ArmSystem) {
@@ -82,6 +86,14 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         registerNamedCommand("EnableIntake",
             armSystem.enableCoralIntake())
 
+        registerNamedCommand("AlignRightBranch",
+            Commands.sequence(
+                llController.alignRobotAllAxis({ LimeLightChoice.Right }, { Pair(Units.Centimeters.of(32.0), Units.Centimeters.of(-2.7))}),
+                WaitUntilCommand { llController.isAtSetPoint(LimeLightChoice.Right, Pair(Units.Centimeters.of(32.0), Units.Centimeters.of(-2.7))) }
+                    .andThen(drive.stopCommand())
+            )
+        )
+
         // Score commands
 
         registerNamedCommand("AlignAndScoreRightBranch",
@@ -124,6 +136,18 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
 
         autoChooser.addOption("Straight Forward", resetPoseAndGetPathFollowingCommand("Straightforward"))
         autoChooser.addOption("C1-CD-bargeToReef", resetPoseAndGetPathFollowingCommand("C1-CD-bargeToReef"))
+        autoChooser.addOption("4LK", PathPlannerAuto("4LK"))
+        autoChooser.addOption("MarcoEsClave", PathPlannerAuto("MarcoEsClave"))
+        autoChooser.addOption("tweaking",
+            Commands.run({
+                llController.alignRobotAllAxisAuto(
+                    { LimeLightChoice.Right },
+                    { llController.getRightLLSetpoints(ArmPoses.BackL3) })
+            }))
+
+
+            //WaitUntilCommand { llController.isAtSetPoint(LimeLightChoice.Right, Pair(Units.Centimeters.of(32.0), Units.Centimeters.of(-2.7))) }
+            //drive.stopCommand(),
 
         // Complete autos
         //autoChooser.addOption("RightAuto", PathPlannerAuto("Right Auto"))
@@ -156,18 +180,18 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
 
     init {
         var alliance = DriverStation.getAlliance()
+        SmartDashboard.putData("Alliance") { alliance.toString() }
 
-        // Instead I used AutoBuilder inside Drive. Should see why configuring it here gives me an error,
-        // I suspect is due to Java - Kotlin interaction failing.
         AutoBuilder.configure(
             drive::getPose,
             drive::setPose,
             drive::getChassisSpeeds,
             {speeds: ChassisSpeeds -> drive.runVelocity(speeds)},
             PPHolonomicDriveController(
-                PIDConstants(0.4, 0.0, 0.5), PIDConstants(0.2, 0.0, 0.4)),
+                PIDConstants(0.5, 0.0, 0.0),    // Translation PID
+                PIDConstants(0.0, 0.0, 0.0)),   // Rotation PID
             robotConfig,
-            { if (alliance.isPresent) { alliance.get() == Alliance.Red } else false },
+            { false },
             drive
         )
 

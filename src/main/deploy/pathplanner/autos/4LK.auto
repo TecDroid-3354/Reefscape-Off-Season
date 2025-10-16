@@ -11,6 +11,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "AlignRightBranch"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "C2-LK-reefToCoralStation"

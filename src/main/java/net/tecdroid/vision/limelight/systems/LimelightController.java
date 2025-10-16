@@ -35,23 +35,16 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
-record ReefPosesForwardDelta(Distance backL4Delta, Distance backL3Delta, Distance backL2Delta,
-                             Distance frontL4Delta, Distance frontL3Delta, Distance frontL2Delta, Distance frontL1Delta){}
+record ReefPosesForwardDelta(Distance backL4Delta, Distance backL3Delta, Distance backL2Delta){}
 
 public class LimelightController {
     private final LimelightAprilTagDetector leftLimelight  = new LimelightAprilTagDetector(new LimelightConfig(StringConstantsKt.leftLimelightName, new Pose3d()));
     private final LimelightAprilTagDetector rightLimelight = new LimelightAprilTagDetector(new LimelightConfig(StringConstantsKt.rightLimelightName, new Pose3d()));
 
-    private final LimelightAprilTagDetector frontLimelight = new LimelightAprilTagDetector(new LimelightConfig(StringConstantsKt.frontLimelightName, new Pose3d()));
-
     /** Setpoints for the back left camera as follows: Pair<FrontalDistance, HorizontalDistance(As closer to zero, distance will increase)> */
     private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(32.5), Centimeters.of(2.5));
     /** Setpoints for the back right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
     private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(32.5), Centimeters.of(-2.7));
-    /** Setpoints for the front left camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> frontLeftLLSetpoints = new Pair<>(Centimeters.of(66.5), Centimeters.of(-2.5));
-    /** Setpoints for the front right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> frontRightLLSetpoints = new Pair<>(Centimeters.of(66.5), Centimeters.of(32.5));
     private final Distance positionTolerance = Centimeters.of(5);
 
     /** Chassis: 27.5in * 27.5in; Center: 27.5in / 2 = 13.75in; Bumpers = 3.25in
@@ -64,8 +57,7 @@ public class LimelightController {
      * TODO() = Recalculate base forward setpoint in front limelight
      */
     private final ReefPosesForwardDelta reefPosesForwardDeltas = new ReefPosesForwardDelta(
-            Centimeters.of(-4.83), Centimeters.of(-4.83), Centimeters.of(0.25),
-            Centimeters.of(0.0), Centimeters.of(0.0), Centimeters.of(0.0), Centimeters.of(0.0));
+            Centimeters.of(-4.50), Centimeters.of(-4.83), Centimeters.of(0.25));
     private final Subsystem requiredSubsystem;
 
     private final ControlGains xyGains = new ControlGains(0.55, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
@@ -74,11 +66,7 @@ public class LimelightController {
     private final PIDController xyBackPidController = new PIDController(xyGains.getP(), xyGains.getI(), xyGains.getD());
     private final PIDController thetaBackPidController = new PIDController(thetaGains.getP(), thetaGains.getI(), thetaGains.getD());
 
-    private final PIDController xyFrontPidController = new PIDController(xyGains.getP(), xyGains.getI(), xyGains.getD());
-    private final PIDController thetaFrontPidController = new PIDController(thetaGains.getP(), thetaGains.getI(), thetaGains.getD());
-
     private final Map<Integer, Double> backLLAlignmentAngles = new HashMap<>();
-    private final Map<Integer, Double> frontLLAlignmentAngles = new HashMap<>();
     private final Consumer<ChassisSpeeds> drive;
     private final DoubleSupplier yaw;
 
@@ -103,38 +91,20 @@ public class LimelightController {
         backLLAlignmentAngles.put(7, 180.0);
         backLLAlignmentAngles.put(8, 240.0);
         backLLAlignmentAngles.put(9, 300.0);
-
-        frontLLAlignmentAngles.put(21, 0.0 - 180);
-        frontLLAlignmentAngles.put(20, 60.0 - 180);
-        frontLLAlignmentAngles.put(19, 120.0 - 180);
-        frontLLAlignmentAngles.put(18, 180.0 - 180);
-        frontLLAlignmentAngles.put(17, 240.0 - 180);
-        frontLLAlignmentAngles.put(22, 300.0 - 180);
-
-        // Red
-        frontLLAlignmentAngles.put(10, 0.0 - 180);
-        frontLLAlignmentAngles.put(11, 60.0 - 180);
-        frontLLAlignmentAngles.put(6, 120.0 - 180);
-        frontLLAlignmentAngles.put(7, 180.0 - 180);
-        frontLLAlignmentAngles.put(8, 240.0 - 180);
-        frontLLAlignmentAngles.put(9, 300.0 - 180);
     }
 
     private void limelightConfiguration() {
         thetaBackPidController.enableContinuousInput(0.0, 360.0);
-        thetaFrontPidController.enableContinuousInput(0.0, 360.0);
 
         Integer[] validIDs = { 21, 20, 19, 18, 17, 22, 10, 11, 6, 7, 8, 9 };
         rightLimelight.setIdFilter(validIDs);
         leftLimelight.setIdFilter(validIDs);
-        frontLimelight.setIdFilter(validIDs);
 
     }
 
     public void setThrottle(int throttle) {
         leftLimelight.setThrottle(throttle);
         rightLimelight.setThrottle(throttle);
-        frontLimelight.setThrottle(throttle);
     }
 
     public void limelightsStream() {
@@ -182,44 +152,24 @@ public class LimelightController {
 
         return hasTarget(choice) && (xDisplacement <= tolerance.in(Meters)) && yDisplacement <= tolerance.in(Meters);
     }
-
-    public Boolean isFront() {
-        return hasTarget(LimeLightChoice.Front);
-    }
-
-
-    public LimeLightChoice getLimelight(BranchSide side) {
-        return switch (side) {
-            case Right -> isFront() ? LimeLightChoice.Front : LimeLightChoice.Right;
-            case Left -> isFront() ? LimeLightChoice.Front : LimeLightChoice.Left;
-        };
-    }
     public Pair<Distance, Distance> getRightLLSetpoints(ArmPoses pose) {
-        Distance horizontalOffset = isFront() ? frontRightLLSetpoints.getSecond() : backRightLLSetpoints.getSecond();
-        Distance forwardSetpoint = isFront() ? frontRightLLSetpoints.getFirst() : backRightLLSetpoints.getFirst();
+        Distance horizontalOffset = backRightLLSetpoints.getSecond();
+        Distance forwardSetpoint = backRightLLSetpoints.getFirst();
 
         Distance forwardOffset = switch (pose) {
-            case FrontL1 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL1Delta());
-            case FrontL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL2Delta());
-            case FrontL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL3Delta());
-            case FrontL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL4Delta());
             case BackL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL2Delta());
             case BackL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL3Delta());
             case BackL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL4Delta());
             default -> forwardSetpoint;
         };
-        return new Pair<Distance, Distance>(forwardOffset, horizontalOffset);
+        return backRightLLSetpoints;//new Pair<Distance, Distance>(forwardOffset, horizontalOffset);
     }
 
     public Pair<Distance, Distance> getLeftLLSetpoints(ArmPoses pose) {
-        Distance horizontalOffset = isFront() ? frontLeftLLSetpoints.getSecond() : backLeftLLSetpoints.getSecond();
-        Distance forwardSetpoint = isFront() ? frontLeftLLSetpoints.getFirst() : backLeftLLSetpoints.getFirst();
+        Distance horizontalOffset = backLeftLLSetpoints.getSecond();
+        Distance forwardSetpoint = backLeftLLSetpoints.getFirst();
 
         Distance forwardOffset = switch (pose) {
-            case FrontL1 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL1Delta());
-            case FrontL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL2Delta());
-            case FrontL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL3Delta());
-            case FrontL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.frontL4Delta());
             case BackL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL2Delta());
             case BackL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL3Delta());
             case BackL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL4Delta());
@@ -229,44 +179,31 @@ public class LimelightController {
     }
 
     private Pose3d getTargetPositionInCameraSpace(LimeLightChoice choice) {
-        LimelightAprilTagDetector limelight = switch (choice) {
-            case Left -> leftLimelight;
-            case Right -> rightLimelight;
-            case Front -> frontLimelight;
-        };
+        LimelightAprilTagDetector limelight = (choice == LimeLightChoice.Right) ? rightLimelight : leftLimelight;
         return limelight.getTargetPositionInCameraSpace();
     }
 
     public int getTargetId(LimeLightChoice choice) {
-        LimelightAprilTagDetector limelight = switch (choice) {
-            case Left -> leftLimelight;
-            case Right -> rightLimelight;
-            case Front -> frontLimelight;
-        };
+        LimelightAprilTagDetector limelight = (choice == LimeLightChoice.Right) ? rightLimelight : leftLimelight;
         return limelight.getTargetId();
     }
 
     private PIDController getXYPidController(LimeLightChoice choice) {
-        return (choice == LimeLightChoice.Left || choice == LimeLightChoice.Right) ? xyBackPidController: xyFrontPidController;
+        return xyBackPidController;
     }
 
     private PIDController getThetaPIDController(LimeLightChoice choice) {
-        return (choice == LimeLightChoice.Left || choice == LimeLightChoice.Right) ? thetaBackPidController : thetaFrontPidController;
+        return thetaBackPidController;
     }
 
     public boolean hasTarget(LimeLightChoice choice) {
-        Limelight limelight = switch (choice) {
-            case Left -> leftLimelight;
-            case Right -> rightLimelight;
-            case Front -> frontLimelight;
-        };
+        Limelight limelight = (choice == LimeLightChoice.Right) ? rightLimelight : leftLimelight;
         return limelight.getHasTarget();
     }
 
     public void setFilterIds(Integer[] targetIds) {
         rightLimelight.setIdFilter(targetIds);
         leftLimelight.setIdFilter(targetIds);
-        frontLimelight.setIdFilter(targetIds);
     }
     // Obtain a yaw between the range [0, 360]
 
@@ -276,6 +213,32 @@ public class LimelightController {
             limitedYaw += 360;
         }
         return limitedYaw;
+    }
+
+    public void alignRobotAllAxisAuto(Supplier<LimeLightChoice> choice, Supplier<Pair<Distance, Distance>> setpoints) {
+            int id = getTargetId(choice.get());
+
+            if (!hasTarget(choice.get()) || !backLLAlignmentAngles.containsKey(id) || isAtSetPoint(choice.get(), setpoints.get())) {
+                drive.accept(new ChassisSpeeds(0.0, 0.0, 0.0));
+                return;
+            }
+
+            Pose3d robotPose = getTargetPositionInCameraSpace(choice.get());
+            PIDController xyPIDController = getXYPidController(choice.get());
+            PIDController thetaPIDController = getThetaPIDController(choice.get());
+            double targetAngleDegrees = backLLAlignmentAngles.get(id);
+
+            xyPIDController.reset();
+            thetaPIDController.reset();
+            double xFactor = clamp(1.0, -1.0, xyPIDController.calculate(robotPose.getTranslation().getZ(), setpoints.get().getFirst().in(Meters)));
+            double yFactor = clamp(1.0, -1.0, xyPIDController.calculate(robotPose.getTranslation().getX(), setpoints.get().getSecond().in(Meters)));
+            double wFactor = clamp(1.0, -1.0, thetaPIDController.calculate(getLimitedYaw(), targetAngleDegrees));
+
+            LinearVelocity xVelocity = MetersPerSecond.of(maxSpeeds.vxMetersPerSecond * xFactor);
+            LinearVelocity yVelocity = MetersPerSecond.of(maxSpeeds.vyMetersPerSecond * yFactor);
+            AngularVelocity wVelocity = DegreesPerSecond.of(Math.toDegrees(maxSpeeds.omegaRadiansPerSecond) * wFactor);
+
+            drive.accept(new ChassisSpeeds(xVelocity, yVelocity, wVelocity));
     }
     public Command alignRobotAllAxis(Supplier<LimeLightChoice> choice, Supplier<Pair<Distance, Distance>> setpoints) {
         return Commands.run(() -> {
@@ -289,7 +252,7 @@ public class LimelightController {
             Pose3d robotPose = getTargetPositionInCameraSpace(choice.get());
             PIDController xyPIDController = getXYPidController(choice.get());
             PIDController thetaPIDController = getThetaPIDController(choice.get());
-            double targetAngleDegrees = isFront() ? frontLLAlignmentAngles.get(id) : backLLAlignmentAngles.get(id);
+            double targetAngleDegrees = backLLAlignmentAngles.get(id);
 
             xyPIDController.reset();
             thetaPIDController.reset();
@@ -297,8 +260,37 @@ public class LimelightController {
             double yFactor = clamp(1.0, -1.0, xyPIDController.calculate(robotPose.getTranslation().getX(), setpoints.get().getSecond().in(Meters)));
             double wFactor = clamp(1.0, -1.0, thetaPIDController.calculate(getLimitedYaw(), targetAngleDegrees));
 
-            LinearVelocity xVelocity = MetersPerSecond.of(maxSpeeds.vxMetersPerSecond * (isFront() ? -xFactor : xFactor));
-            LinearVelocity yVelocity = MetersPerSecond.of(maxSpeeds.vyMetersPerSecond * (isFront() ? -yFactor : yFactor));
+            LinearVelocity xVelocity = MetersPerSecond.of(maxSpeeds.vxMetersPerSecond * xFactor);
+            LinearVelocity yVelocity = MetersPerSecond.of(maxSpeeds.vyMetersPerSecond * yFactor);
+            AngularVelocity wVelocity = DegreesPerSecond.of(Math.toDegrees(maxSpeeds.omegaRadiansPerSecond) * wFactor);
+
+            drive.accept(new ChassisSpeeds(xVelocity, yVelocity, wVelocity));
+
+        }, requiredSubsystem);
+    }
+
+    public Command alignRobotAllAxis(Supplier<LimeLightChoice> choice, Supplier<Pair<Distance, Distance>> setpoints, Double extraDegreesSetpoint) {
+        return Commands.run(() -> {
+            int id = getTargetId(choice.get());
+
+            if (!hasTarget(choice.get()) || !backLLAlignmentAngles.containsKey(id) || isAtSetPoint(choice.get(), setpoints.get())) {
+                drive.accept(new ChassisSpeeds(0.0, 0.0, 0.0));
+                return;
+            }
+
+            Pose3d robotPose = getTargetPositionInCameraSpace(choice.get());
+            PIDController xyPIDController = getXYPidController(choice.get());
+            PIDController thetaPIDController = getThetaPIDController(choice.get());
+            double targetAngleDegrees = backLLAlignmentAngles.get(id);
+
+            xyPIDController.reset();
+            thetaPIDController.reset();
+            double xFactor = clamp(1.0, -1.0, xyPIDController.calculate(robotPose.getTranslation().getZ(), setpoints.get().getFirst().in(Meters)));
+            double yFactor = clamp(1.0, -1.0, xyPIDController.calculate(robotPose.getTranslation().getX(), setpoints.get().getSecond().in(Meters)));
+            double wFactor = clamp(1.0, -1.0, thetaPIDController.calculate(getLimitedYaw(), targetAngleDegrees - extraDegreesSetpoint));
+
+            LinearVelocity xVelocity = MetersPerSecond.of(maxSpeeds.vxMetersPerSecond * xFactor);
+            LinearVelocity yVelocity = MetersPerSecond.of(maxSpeeds.vyMetersPerSecond * yFactor);
             AngularVelocity wVelocity = DegreesPerSecond.of(Math.toDegrees(maxSpeeds.omegaRadiansPerSecond) * wFactor);
 
             drive.accept(new ChassisSpeeds(xVelocity, yVelocity, wVelocity));
@@ -320,7 +312,7 @@ public class LimelightController {
             Pose3d robotPose = getTargetPositionInCameraSpace(choice);
             PIDController xyPIDController = getXYPidController(choice);
             PIDController thetaPIDController = getThetaPIDController(choice);
-            double targetAngleDegrees = isFront() ? frontLLAlignmentAngles.get(id) : backLLAlignmentAngles.get(id);
+            double targetAngleDegrees = backLLAlignmentAngles.get(id);
 
             xyPIDController.reset();
             thetaPIDController.reset();
@@ -328,8 +320,8 @@ public class LimelightController {
             double yFactor = clamp(1.0, -1.0, xyPIDController.calculate(robotPose.getTranslation().getX(), setpoints.getSecond().in(Meters)));
             double wFactor = clamp(1.0, -1.0, thetaPIDController.calculate(getLimitedYaw(), targetAngleDegrees));
 
-            LinearVelocity xVelocity = MetersPerSecond.of(maxSpeeds.vxMetersPerSecond * (isFront() ? -xFactor : xFactor));
-            LinearVelocity yVelocity = MetersPerSecond.of(maxSpeeds.vyMetersPerSecond * (isFront() ? -yFactor : yFactor));
+            LinearVelocity xVelocity = MetersPerSecond.of(maxSpeeds.vxMetersPerSecond * xFactor);
+            LinearVelocity yVelocity = MetersPerSecond.of(maxSpeeds.vyMetersPerSecond * yFactor);
             AngularVelocity wVelocity = DegreesPerSecond.of(Math.toDegrees(maxSpeeds.omegaRadiansPerSecond) * wFactor);
 
             drive.accept(new ChassisSpeeds(xVelocity, yVelocity, wVelocity));
