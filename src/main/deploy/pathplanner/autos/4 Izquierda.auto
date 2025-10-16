@@ -11,9 +11,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "L4-AlignScoreLeftBranch"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "C2-Left4-reefToCoralStation"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "FeedCoralStation"
           }
         },
         {
@@ -23,9 +35,28 @@
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "C3-Left4-reefToCoralStation"
+            "name": "L4-AlignScoreRightBranch"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C3-Left4-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
           }
         },
         {
@@ -35,15 +66,40 @@
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "C4-Left4-reefToCoralStation"
+            "name": "L4-AlignScoreLeftBranch"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C4-Left4-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "C4-Left4-coralStationToReef"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4-AlignScoreRightBranch"
           }
         }
       ]

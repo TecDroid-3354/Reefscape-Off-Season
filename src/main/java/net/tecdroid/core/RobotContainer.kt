@@ -93,7 +93,7 @@ class RobotContainer {
         llController = LimelightController(
             drive,
             { chassisSpeeds -> drive.runVelocity(chassisSpeeds) },
-            { drive.rotation.degrees }, drive.maxSwerveSpeeds.times(0.35))
+            { drive.rotation.degrees }, drive.maxSwerveSpeeds.times(0.75))
         llController.shuffleboardData()
         arm.publishShuffleBoardData()
         arm.assignCommands()

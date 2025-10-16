@@ -24,6 +24,7 @@ import net.tecdroid.systems.ArmSystem.ArmOrders
 import net.tecdroid.systems.ArmSystem.ArmPoses
 import net.tecdroid.systems.ArmSystem.ArmSystem
 import net.tecdroid.systems.ArmSystem.BranchSide
+import net.tecdroid.systems.ArmSystem.PoseCommands
 import net.tecdroid.util.meters
 import net.tecdroid.util.seconds
 import net.tecdroid.vision.limelight.systems.LimeLightChoice
@@ -87,46 +88,120 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
             armSystem.enableCoralIntake())
 
         registerNamedCommand("AlignRightBranch",
-            Commands.sequence(
-                llController.alignRobotAllAxis({ LimeLightChoice.Right }, { Pair(Units.Centimeters.of(32.0), Units.Centimeters.of(-2.7))}),
-                WaitUntilCommand { llController.isAtSetPoint(LimeLightChoice.Right, Pair(Units.Centimeters.of(32.0), Units.Centimeters.of(-2.7))) }
-                    .andThen(drive.stopCommand())
-            )
+            llController.alignRobotAllAxis ({ LimeLightChoice.Right }, { llController.getRightLLSetpoints(ArmPoses.BackL4) })
+                .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(ArmPoses.BackL4)) }
+                .andThen(drive.stopCommand())
+        )
+
+        registerNamedCommand("AlignLeftBranch",
+            llController.alignRobotAllAxis ({ LimeLightChoice.Left }, { llController.getRightLLSetpoints(ArmPoses.BackL4) })
+                .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getRightLLSetpoints(ArmPoses.BackL4)) }
+                .andThen(drive.stopCommand())
         )
 
         // Score commands
 
-        registerNamedCommand("AlignAndScoreRightBranch",
-            Commands.sequence(
-                ParallelCommandGroup(
-                    llController.alignRobotAllAxis({ LimeLightChoice.Right }, { llController.getRightLLSetpoints(ArmPoses.BackL4) })
-                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(ArmPoses.BackL4)) },
-                    armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order),
-                ).withTimeout(2.5),
-                drive.stopCommand(),
-
-                armSystem.enableCoralIntake(),
-                Commands.waitUntil { !armSystem.intake.hasCoral() },
-                Commands.waitTime(0.35.seconds),
-                armSystem.disableCoralIntake())
-            )
-
-        registerNamedCommand("AlignAndScoreLeftBranch",
+        registerNamedCommand(
+            "L4-AlignScoreRightBranch",
             Commands.sequence(
                 ParallelCommandGroup(
                     llController.alignRobotAllAxis(
-                        { LimeLightChoice.Left },
-                        { llController.getLeftLLSetpoints(ArmPoses.BackL4) })
-                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getLeftLLSetpoints(ArmPoses.BackL4)) },
+                        { LimeLightChoice.Right },
+                        { llController.getRightLLSetpoints(ArmPoses.BackL4) })
+                        .until {
+                            llController.isAtSetPoint(
+                                LimeLightChoice.Right,
+                                llController.getRightLLSetpoints(ArmPoses.BackL4)
+                            )
+                        }
+                        .andThen(drive.stopCommand()),
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order),
-                ).withTimeout(2.5),
+                ).withTimeout(1.67.seconds),
 
-                drive.stopCommand(),
-
-                armSystem.enableCoralIntake(),
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.enableCoralOuttake().schedule() }),
+                    Commands.runOnce({ armSystem.enableAlgaeOuttake().schedule() })),
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
-                Commands.waitTime(0.35.seconds),
-                armSystem.disableCoralIntake())
+                Commands.waitTime(0.1.seconds),
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.disableCoralIntake().schedule() }),
+                    Commands.runOnce({ armSystem.disableAlgaeIntake().schedule() })),
+                armSystem.setPoseCommand(ArmPoses.Passive, ArmOrders.EJW.order)
+            ),
+        )
+
+        registerNamedCommand("L3-AlignScoreRightBranch",
+            Commands.sequence(
+                ParallelCommandGroup(
+                    llController.alignRobotAllAxis ({ LimeLightChoice.Right }, { llController.getRightLLSetpoints(ArmPoses.BackL3) })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(ArmPoses.BackL3)) }
+                        .andThen(drive.stopCommand()),
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL3, ArmOrders.JEW.order),
+                ).withTimeout(1.67.seconds),
+
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.enableCoralOuttake().schedule() }),
+                    Commands.runOnce({ armSystem.enableAlgaeOuttake().schedule() })),
+                Commands.waitUntil { !armSystem.intake.hasCoral() },
+                Commands.waitTime(0.1.seconds),
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.disableCoralIntake().schedule() }),
+                    Commands.runOnce({ armSystem.disableAlgaeIntake().schedule() })),
+                armSystem.setPoseCommand(ArmPoses.Passive, ArmOrders.EJW.order)),
+        )
+
+        registerNamedCommand("L4-AlignScoreLeftBranch",
+            Commands.sequence(
+                ParallelCommandGroup(
+                    llController.alignRobotAllAxis ({ LimeLightChoice.Left }, { llController.getLeftLLSetpoints(ArmPoses.BackL4) })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getLeftLLSetpoints(ArmPoses.BackL4)) }
+                        .andThen(drive.stopCommand()),
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order),
+                ).withTimeout(1.67.seconds),
+
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.enableCoralOuttake().schedule() }),
+                    Commands.runOnce({ armSystem.enableAlgaeOuttake().schedule() })),
+                Commands.waitUntil { !armSystem.intake.hasCoral() },
+                Commands.waitTime(0.1.seconds),
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.disableCoralIntake().schedule() }),
+                    Commands.runOnce({ armSystem.disableAlgaeIntake().schedule() })),
+                armSystem.setPoseCommand(ArmPoses.Passive, ArmOrders.EJW.order)),
+            )
+
+        registerNamedCommand("L3-AlignScoreLeftBranch",
+            Commands.sequence(
+                ParallelCommandGroup(
+                    llController.alignRobotAllAxis ({ LimeLightChoice.Left }, { llController.getLeftLLSetpoints(ArmPoses.BackL3) })
+                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getLeftLLSetpoints(ArmPoses.BackL3)) }
+                        .andThen(drive.stopCommand()),
+                    armSystem.setPoseAutoCommand(ArmPoses.BackL3, ArmOrders.JEW.order),
+                ).withTimeout(1.67.seconds),
+
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.enableCoralOuttake().schedule() }),
+                    Commands.runOnce({ armSystem.enableAlgaeOuttake().schedule() })),
+                Commands.waitUntil { !armSystem.intake.hasCoral() },
+                Commands.waitTime(0.1.seconds),
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.disableCoralIntake().schedule() }),
+                    Commands.runOnce({ armSystem.disableAlgaeIntake().schedule() })),
+                armSystem.setPoseCommand(ArmPoses.Passive, ArmOrders.EJW.order)),
+        )
+
+        registerNamedCommand("FeedCoralStation",
+            Commands.sequence(
+                armSystem.setPoseCommand(PoseCommands.CoralStation),
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.enableCoralIntake().schedule() }),
+                    Commands.runOnce({ armSystem.enableAlgaeIntake().schedule() })),
+                WaitUntilCommand { armSystem.hasCoral() },
+                ParallelCommandGroup(
+                    Commands.runOnce({ armSystem.disableCoralIntake().schedule() }),
+                    Commands.runOnce({ armSystem.disableAlgaeIntake().schedule() })),
+                armSystem.setPoseCommand(PoseCommands.Passive)
+            )
             )
     }
 
@@ -137,13 +212,14 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         autoChooser.addOption("Straight Forward", resetPoseAndGetPathFollowingCommand("Straightforward"))
         autoChooser.addOption("C1-CD-bargeToReef", resetPoseAndGetPathFollowingCommand("C1-CD-bargeToReef"))
         autoChooser.addOption("4LK", PathPlannerAuto("4LK"))
+        autoChooser.addOption("4 Izquierda ILKJ", PathPlannerAuto("4 Izquierda"))
+
+
         autoChooser.addOption("MarcoEsClave", PathPlannerAuto("MarcoEsClave"))
         autoChooser.addOption("tweaking",
-            Commands.run({
-                llController.alignRobotAllAxisAuto(
-                    { LimeLightChoice.Right },
-                    { llController.getRightLLSetpoints(ArmPoses.BackL3) })
-            }))
+            llController.alignRobotAllAxis ({ LimeLightChoice.Right }, { llController.getRightLLSetpoints(ArmPoses.BackL4) })
+                .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(ArmPoses.BackL4)) }
+                .andThen(drive.stopCommand()))
 
 
             //WaitUntilCommand { llController.isAtSetPoint(LimeLightChoice.Right, Pair(Units.Centimeters.of(32.0), Units.Centimeters.of(-2.7))) }
@@ -188,8 +264,8 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
             drive::getChassisSpeeds,
             {speeds: ChassisSpeeds -> drive.runVelocity(speeds)},
             PPHolonomicDriveController(
-                PIDConstants(0.5, 0.0, 0.0),    // Translation PID
-                PIDConstants(0.0, 0.0, 0.0)),   // Rotation PID
+                PIDConstants(2.5, 0.0, 0.0),    // Translation PID
+                PIDConstants(1.25, 0.0, 0.0)),   // Rotation PID
             robotConfig,
             { false },
             drive

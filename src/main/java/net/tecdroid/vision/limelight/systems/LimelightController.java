@@ -42,10 +42,10 @@ public class LimelightController {
     private final LimelightAprilTagDetector rightLimelight = new LimelightAprilTagDetector(new LimelightConfig(StringConstantsKt.rightLimelightName, new Pose3d()));
 
     /** Setpoints for the back left camera as follows: Pair<FrontalDistance, HorizontalDistance(As closer to zero, distance will increase)> */
-    private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(32.5), Centimeters.of(2.5));
+    private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(33.5), Centimeters.of(2.5));
     /** Setpoints for the back right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
-    private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(32.5), Centimeters.of(-2.7));
-    private final Distance positionTolerance = Centimeters.of(5);
+    private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(33.5), Centimeters.of(-2.5));
+    private final Distance positionTolerance = Centimeters.of(1.5);
 
     /** Chassis: 27.5in * 27.5in; Center: 27.5in / 2 = 13.75in; Bumpers = 3.25in
      * back LL: LLForward = -0.1905m; back LL lens to end of bumper: (Center + Bumpers) - LLForward = 24.13cm
@@ -157,12 +157,11 @@ public class LimelightController {
         Distance forwardSetpoint = backRightLLSetpoints.getFirst();
 
         Distance forwardOffset = switch (pose) {
-            case BackL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL2Delta());
-            case BackL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL3Delta());
-            case BackL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL4Delta());
+            case BackL2 -> forwardSetpoint.plus(Centimeters.of(6.0)); // TODO() = Match the 8.5 of left?
             default -> forwardSetpoint;
         };
-        return backRightLLSetpoints;//new Pair<Distance, Distance>(forwardOffset, horizontalOffset);
+
+        return new Pair<Distance, Distance>(forwardOffset, horizontalOffset);//new Pair<Distance, Distance>(forwardOffset, horizontalOffset);
     }
 
     public Pair<Distance, Distance> getLeftLLSetpoints(ArmPoses pose) {
@@ -170,9 +169,7 @@ public class LimelightController {
         Distance forwardSetpoint = backLeftLLSetpoints.getFirst();
 
         Distance forwardOffset = switch (pose) {
-            case BackL2 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL2Delta());
-            case BackL3 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL3Delta());
-            case BackL4 -> forwardSetpoint.plus(reefPosesForwardDeltas.backL4Delta());
+            case BackL2 -> forwardSetpoint.plus(Centimeters.of(8.5));
             default -> forwardSetpoint;
         };
         return new Pair<Distance, Distance>(forwardOffset, horizontalOffset);

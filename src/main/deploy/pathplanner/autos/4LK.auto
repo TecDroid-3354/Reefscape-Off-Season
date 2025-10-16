@@ -13,7 +13,7 @@
         {
           "type": "named",
           "data": {
-            "name": "AlignRightBranch"
+            "name": "L4-AlignScoreLeftBranch"
           }
         },
         {
@@ -23,9 +23,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "FeedCoralStation"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "C2-LK-coralStationToReef"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4-AlignScoreRightBranch"
           }
         },
         {
@@ -35,9 +47,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "FeedCoralStation"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "C3-LK-coralStationToReef"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L3-AlignScoreLeftBranch"
           }
         },
         {
@@ -47,9 +71,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "FeedCoralStation"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "C4-LK-coralStationToReef"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L3-AlignScoreRightBranch"
           }
         }
       ]

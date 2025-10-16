@@ -80,7 +80,7 @@ enum class ArmPoses(var pose: ArmPose) {
     BackL3(
         ArmPose(
             wristPosition           = 200.0.degrees - 90.0.degrees,
-            elevatorDisplacement    = 14.5.inches,
+            elevatorDisplacement    = 13.25.inches,
             elevatorJointPosition   = 90.0.degrees,
             targetCoralVoltage      = 8.0.volts,
             targetAlgaeVoltage      = 8.0.volts
@@ -102,8 +102,8 @@ enum class ArmPoses(var pose: ArmPose) {
             wristPosition           = (-22.5).degrees,
             elevatorDisplacement    = 0.1917.meters,
             elevatorJointPosition   = 66.2.degrees,
-            targetCoralVoltage      = 8.0.volts,
-            targetAlgaeVoltage      = 8.0.volts
+            targetCoralVoltage      = 3.75.volts,
+            targetAlgaeVoltage      = 3.75.volts
     )
     ),
 
@@ -395,8 +395,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         stateMachine.addCondition({ hasCoral() }, States.ScoreState, Phase.Teleop)
 
         // Change to coral state if we are in score state, and we just pull out a coral
-        stateMachine.addCondition({ (stateMachine.isState(States.ScoreState).invoke() ||
-                stateMachine.isState(States.ScoreState).invoke() ) && !hasCoral() },
+        stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !hasCoral() },
             States.MarcoState, Phase.Teleop)
     }
 
