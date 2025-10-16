@@ -41,7 +41,7 @@ class RobotContainer {
     private val controller = CompliantXboxController(driverControllerId)
     private var drive: Drive
     private val stateMachine = StateMachine(States.MarcoState)
-    private val arm = ArmSystem(stateMachine, ::limeLightIsAtSetPoint, controller)
+    private val arm = ArmSystem(stateMachine, ::isLimelightFront, ::limeLightIsAtSetPoint, controller)
     private val llController: LimelightController
     //private val pathPlannerAutonomous: PathPlannerAutonomous
     private val swerveRotationLockSystem: SwerveRotationLockSystem
@@ -188,6 +188,10 @@ class RobotContainer {
 
     private fun advantageScopeLogs() {
         robotPosePublisher.set(drive.pose)
+    }
+
+    fun isLimelightFront(): Boolean {
+        return llController.isFront
     }
 
     fun limeLightIsAtSetPoint(limeLightChoice: LimeLightChoice): Boolean {

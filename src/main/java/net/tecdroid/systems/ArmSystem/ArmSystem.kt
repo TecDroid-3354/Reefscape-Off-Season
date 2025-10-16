@@ -243,7 +243,7 @@ enum class PoseCommands(val pose: ArmPoses, val order: ArmOrder) {
     Passive(ArmPoses.Passive, ArmOrders.JEW.order),
 }
 
-class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Distance) -> Boolean, val controller: CompliantXboxController) : Sendable {
+class ArmSystem(val stateMachine: StateMachine, val isFrontLL: () -> Boolean, val limeLightIsAtSetPoint: (Distance) -> Boolean, val controller: CompliantXboxController) : Sendable {
     val wrist = Wrist(stateMachine.isState(States.ClimbState))
     val elevator = Elevator()
     val joint = ElevatorJoint()
@@ -422,16 +422,23 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         // Active passive intake
         States.AlgaeState.setInitialCommand(intake.setAlgaeVoltageCommand(1.5.volts))
 
-        States.ScoreState.setInitialCommand(setPoseCommand(PoseCommands.Passive))
-
+        States.BackScoreState.setInitialCommand(setPoseCommand(PoseCommands.Passive))
 
         // Go to passive position after score a coral
-        States.ScoreState.setEndCommand(SequentialCommandGroup(
+        States.BackScoreState.setEndCommand(SequentialCommandGroup(
             WaitUntilCommand({ hasCoral().not() }),
             WaitCommand(0.1.seconds),
             intake.setAlgaeVoltageCommand(0.0.volts),
             intake.setCoralVoltageCommand(0.0.volts),
             setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order)
+        ))
+
+        States.FrontScoreState.setEndCommand(SequentialCommandGroup(
+            WaitUntilCommand({ hasCoral().not() }),
+            WaitCommand(0.1.seconds),
+            intake.setAlgaeVoltageCommand(0.0.volts),
+            intake.setCoralVoltageCommand(0.0.volts),
+            setPoseCommand(ArmPoses.Passive, ArmOrders.WEJ.order)
         ))
 
 
@@ -452,12 +459,15 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         ))*/
 
         // Change to score state when coral is detected
-        stateMachine.addCondition({ hasCoral() }, States.ScoreState, Phase.Teleop)
+        stateMachine.addCondition({ hasCoral() && isFrontLL.invoke().not() }, States.BackScoreState, Phase.Teleop)
+
+        stateMachine.addCondition({ hasCoral() && isFrontLL.invoke() }, States.FrontScoreState, Phase.Teleop)
             .andThen(setPoseCommand(PoseCommands.Passive))
 
         // Change to coral state if we are in score state, and we just pull out a coral
-        stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !hasCoral() }, States.MarcoState, Phase.Teleop)
-
+        stateMachine.addCondition({ (stateMachine.isState(States.BackScoreState).invoke() ||
+                stateMachine.isState(States.BackScoreState).invoke() ) && !hasCoral() },
+            States.MarcoState, Phase.Teleop)
     }
 
     fun setAllCoast(): Command {
@@ -495,13 +505,17 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                         { limeLightIsAtSetPoint(0.415.meters) }
                     )*/
 
-                    States.ScoreState -> Commands.either (
+                    States.BackScoreState -> Commands.either (
                         scoringSequence(PoseCommands.BackL4),
                         Commands.runOnce({ targetPose = ArmPoses.BackL4 }),
                         { limeLightIsAtSetPoint(0.415.meters) }
                     )
-                        //WaitUntilCommand { limeLightIsAtSetPoint(0.1.meters) }.andThen(
-                        //scoringSequence(PoseCommands.BackL4))
+
+                    States.FrontScoreState -> Commands.either (
+                        scoringSequence(PoseCommands.FrontL4),
+                        Commands.runOnce({ targetPose = ArmPoses.FrontL4 }),
+                        { limeLightIsAtSetPoint(0.415.meters) }
+                    )
 
                     States.MarcoState -> setPoseCommand(PoseCommands.BackL4)
                     States.IntakeState -> setPoseCommand(PoseCommands.BackL4)
@@ -531,10 +545,16 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                 )*/
 
                 //States.ScoreState -> Commands.waitUntil { limeLightIsAtSetPoint(0.445.meters) }.andThen(scoringSequence(PoseCommands.BackL3))
-                States.ScoreState -> Commands.either (
+                States.BackScoreState -> Commands.either (
                     scoringSequence(PoseCommands.BackL3),
                     Commands.runOnce({ targetPose = ArmPoses.BackL3 }),
                     { limeLightIsAtSetPoint(0.445.meters) }
+                )
+
+                States.FrontScoreState -> Commands.either (
+                    scoringSequence(PoseCommands.FrontL3),
+                    Commands.runOnce({ targetPose = ArmPoses.FrontL3 }),
+                    { limeLightIsAtSetPoint(0.415.meters) }
                 )
 
                     //WaitUntilCommand { limeLightIsAtSetPoint(0.13.meters) }.andThen(
@@ -563,19 +583,29 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                     setPoseCommand(PoseCommands.BackL2),
                     { limeLightIsAtSetPoint((-0.145).meters) }
                 )*/
-                States.ScoreState -> Commands.either (
+                States.BackScoreState -> Commands.either (
                     scoringSequence(PoseCommands.BackL2),
                     Commands.runOnce({ targetPose = ArmPoses.BackL2 }),
                     { limeLightIsAtSetPoint((-0.145).meters) }
                 )
+
+                States.FrontScoreState -> Commands.either (
+                    scoringSequence(PoseCommands.FrontL2),
+                    Commands.runOnce({ targetPose = ArmPoses.FrontL2 }),
+                    { limeLightIsAtSetPoint((-0.145).meters) }
+                )
+
+
                     //WaitUntilCommand { limeLightIsAtSetPoint(0.25.meters) }.andThen(
                     //scoringSequence(PoseCommands.BackL2))
 
                 States.MarcoState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
                     .andThen(setPoseCommand(PoseCommands.BackL2))
+
                 States.IntakeState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
                     .andThen(setPoseCommand(PoseCommands.BackL2))
                     .andThen({stateMachine.changeState(States.MarcoState)})
+
                 States.AlgaeState -> Commands.none()//Commands.sequence(
 //                    enableAlgaeIntake(2.0.volts),
 //                    setPoseCommand(
@@ -596,11 +626,13 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                     setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order)
                 )
 
-                States.IntakeState, States.ScoreState -> setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order)
+                States.IntakeState -> setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order)
 
                 States.AlgaeState -> Commands.sequence(
                     setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order),
                     Commands.runOnce({ stateMachine.changeState(States.IntakeState)}))
+
+                States.BackScoreState, States.FrontScoreState -> Commands.none()
 
                 States.ClimbState -> Commands.run({ climber.setAngle(80.0.degrees) })
             })
@@ -623,7 +655,11 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
         Intake())*/
         controller.rightBumper()
             .onTrue(Commands.runOnce({scheduleCMD(when (stateMachine.getCurrentState()) {
-                            States.ScoreState -> Commands.runOnce({scheduleCMD(
+                            States.BackScoreState -> Commands.runOnce({scheduleCMD(
+                                ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
+                            })
+
+                            States.FrontScoreState -> Commands.runOnce({scheduleCMD(
                                 ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
                             })
 
@@ -643,7 +679,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
             .onFalse(Commands.runOnce({
                 scheduleCMD(
                     when (stateMachine.getCurrentState()) {
-                        States.ScoreState -> Commands.runOnce({scheduleCMD(
+                        States.BackScoreState -> Commands.runOnce({scheduleCMD(
                                 ParallelCommandGroup(disableCoralIntake(), disableAlgaeIntake()))
                         })
 
@@ -662,7 +698,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
             }))
 
             // ! Analog climber
-        controller.povUp().onTrue(Commands.runOnce({
+        controller.povUp().whileTrue(Commands.run({
             scheduleCMD(
                 when (stateMachine.getCurrentState()) {
                     States.ClimbState -> InstantCommand({ climber.setVoltage(12.0.volts) })
@@ -671,7 +707,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
             )}))
                 .onFalse(InstantCommand({ climber.setVoltage(0.0.volts) }))
 
-        controller.povDown().onTrue(Commands.runOnce({
+        controller.povDown().whileTrue(Commands.run({
             scheduleCMD(
                 when (stateMachine.getCurrentState()) {
                     States.ClimbState -> InstantCommand({ climber.setVoltage(-12.0.volts) })
@@ -710,7 +746,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
             .onFalse(Commands.runOnce({scheduleCMD(ParallelCommandGroup(disableCoralIntake(), disableAlgaeIntake()))}))*/
         controller.leftBumper()
             .onTrue(Commands.runOnce({scheduleCMD(when (stateMachine.getCurrentState()) {
-                States.ScoreState -> scoringSequence(targetPose, ArmOrders.JEW.order)
+                States.BackScoreState -> scoringSequence(targetPose, ArmOrders.JEW.order)
 
                 else -> Commands.none()
             })}))

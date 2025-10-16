@@ -173,7 +173,7 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
         return false
     }
 
-    /** Checks the inner CANRange, as it's the one that detects the coral when fully inside intake */
+    /** Checks the inner CANRange adn the center one to ensure the coral has aligned correctly, as it's the one that detects the coral when fully inside intake */
     fun hasCoral(): Boolean = config.intakeInnerCanRange.isDetected.value && config.intakeCenterCanRange.isDetected.value
 
     fun isHorizontallyDetected(): Boolean {
@@ -182,6 +182,7 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
         }
         return true
     }
+
     /**
      * Configures motors for both Coral & Algae Rollers independently.
      */

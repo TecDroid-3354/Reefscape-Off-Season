@@ -117,9 +117,18 @@ class Climber :
      * Just for safety, running conditions are checked inside the method, though it's redundant
      * with the SysId running condition. SysId SHOULD BE THE ONLY PLACE WHERE THIS METHOD IS CALLED.
      * NOT INTENDED TO USE FOR ROBOT CONTROL.
+     * NOTE:
+     * Positive Voltage: Wrist moving away from the center of the robot.
+     * Negative Voltage: Wrist moving towards the center of the robot.
      */
     override fun setVoltage(voltage: Voltage) {
-        wristController.setControl(VoltageOut(voltage))
+        if (angle >= config.measureLimits.relativeMaximum && voltage.gt(0.0.volts)) {
+            wristController.stopMotor()
+        } else if (angle <= config.measureLimits.relativeMinimum && voltage.lt(0.0.volts)) {
+            wristController.stopMotor()
+        } else {
+            wristController.setControl(VoltageOut(voltage))
+        }
     }
 
     /**
