@@ -87,7 +87,7 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
             ))
 
         hasAlgaeTrigger.and { DriverStation.isTeleop() }
-            .onTrue(InstantCommand({ setAlgaeVoltage(2.0.volts) }))
+            .onTrue(InstantCommand({ setAlgaeVoltage(1.0.volts) }))
     }
 
     /**

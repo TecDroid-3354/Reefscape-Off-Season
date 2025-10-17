@@ -192,6 +192,10 @@ enum class PoseCommands(val pose: ArmPoses, val order: ArmOrder) {
     BackL4(ArmPoses.BackL4, ArmOrders.JEW.order),
     BackL3(ArmPoses.BackL3, ArmOrders.JEW.order),
     BackL2(ArmPoses.BackL2, ArmOrders.JEW.order),
+    A1(ArmPoses.A1, ArmOrders.JEW.order),
+    A2(ArmPoses.A2, ArmOrders.JEW.order),
+    AlgaeFloorIntake(ArmPoses.AlgaeFloorIntake, ArmOrders.EJW.order),
+    Barge(ArmPoses.Barge, ArmOrders.JWE.order),
     CoralFloorIntakeSafe(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EWJ.order),
     CoralStation(ArmPoses.CoralStation, ArmOrders.EJW.order),
     Processor(ArmPoses.Processor, ArmOrders.EJW.order),
@@ -419,11 +423,6 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
 
     fun assignCommands() {
         assignStatesCommands()
-
-        controller.povLeft().onTrue(
-            Commands.runOnce({changeState()})
-        )
-
         // Y
         controller.y().onTrue(
             Commands.runOnce({
@@ -443,7 +442,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                     States.MarcoState -> setPoseCommand(PoseCommands.BackL4)
                     States.IntakeState -> setPoseCommand(PoseCommands.BackL4)
                         .andThen({stateMachine.changeState(States.MarcoState)})
-                    States.AlgaeState -> Commands.none()//Commands.sequence(
+                    States.AlgaeState -> setPoseCommand(PoseCommands.Barge)//Commands.sequence(
 //                        enableAlgaeIntake(2.0.volts),
 //                        setPoseCommand(
 //                            ArmPoses.Barge.pose,
@@ -477,7 +476,9 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                 States.MarcoState -> setPoseCommand(PoseCommands.BackL3)
                 States.IntakeState -> setPoseCommand(PoseCommands.BackL3)
                     .andThen({stateMachine.changeState(States.MarcoState)})
-                States.AlgaeState -> Commands.none()//Commands.sequence(
+                States.AlgaeState -> setPoseCommand(PoseCommands.A2).andThen(
+                    intake.setAlgaeVoltageCommand(3.0.volts)
+                )//Commands.sequence(
 //                    enableAlgaeIntake(2.0.volts),
 //                    setPoseCommand(
 //                        ArmPoses.A2.pose,
@@ -510,7 +511,8 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                     .andThen(setPoseCommand(PoseCommands.BackL2))
                     .andThen({stateMachine.changeState(States.MarcoState)})
 
-                States.AlgaeState -> Commands.none()//Commands.sequence(
+                States.AlgaeState -> setPoseCommand(PoseCommands.A1).andThen(
+                    intake.setAlgaeVoltageCommand(3.0.volts))//Commands.sequence(
 //                    enableAlgaeIntake(2.0.volts),
 //                    setPoseCommand(
 //                        ArmPoses.A1.pose,
@@ -615,6 +617,11 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
                 }
             )}))
             .onFalse(InstantCommand({ climber.setVoltage(0.0.volts) }))
+
+        controller.povLeft().onTrue(
+            Commands.runOnce({changeState()})
+        )
+
 
         // POV down
 //        controller.povDown().onTrue(
