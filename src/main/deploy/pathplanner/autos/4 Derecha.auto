@@ -5,45 +5,166 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "C1-Rigth4-bargeToReef"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C1-Rigth4-bargeToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "C2-Rigth4-reefToCoralStation"
+            "name": "L4-AlignScoreRightBranch"
           }
         },
         {
-          "type": "path",
+          "type": "sequential",
           "data": {
-            "pathName": "C2-Rigth4-coralStationToReef"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C2-Rigth4-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "C3-Rigth4-reefToCoralStation"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C2-Rigth4-coralStationToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "C3-Rigth4-coralStationToReef"
+            "name": "L4-AlignScoreRightBranch"
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "C4-Rigth4-reefToCoralStation"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C3-Rigth4-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "C4-Rigth4-coralStationToReef"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C3-Rigth4-coralStationToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4-AlignScoreLeftBranch"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C4-Rigth4-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C4-Rigth4-coralStationToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4-AlignScoreLeftBranch"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "FloorIntakeSafePos"
           }
         }
       ]

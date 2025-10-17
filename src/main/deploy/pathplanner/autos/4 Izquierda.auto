@@ -164,7 +164,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ArmCoralStationPoseEJW"
+            "name": "FloorIntakeSafePos"
           }
         }
       ]

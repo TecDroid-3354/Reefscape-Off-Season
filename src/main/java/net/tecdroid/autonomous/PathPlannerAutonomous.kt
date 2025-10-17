@@ -78,6 +78,9 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         registerNamedCommand("FloorIntakePos",
             armSystem.setPoseAutoCommand(ArmPoses.CoralFloorIntake, ArmOrders.EJW.order))
 
+        registerNamedCommand("FloorIntakeSafePos",
+            armSystem.setPoseAutoCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EJW.order))
+
         // Intake
         registerNamedCommand("EnableIntakeUntilHasCoral",
             Commands.sequence(
