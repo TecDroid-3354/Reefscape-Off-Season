@@ -217,14 +217,16 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         autoChooser.addOption("Straight Forward", resetPoseAndGetPathFollowingCommand("Straightforward"))
         autoChooser.addOption("C1-CD-bargeToReef", resetPoseAndGetPathFollowingCommand("C1-CD-bargeToReef"))
         autoChooser.addOption("4LK", PathPlannerAuto("4LK"))
+        autoChooser.addOption("4CD", PathPlannerAuto("4CD"))
         autoChooser.addOption("4 Izquierda ILKJ", PathPlannerAuto("4 Izquierda"))
+        autoChooser.addOption("4 Derecha FDCE", PathPlannerAuto("4 Derecha"))
 
 
         autoChooser.addOption("MarcoEsClave", PathPlannerAuto("MarcoEsClave"))
-        autoChooser.addOption("tweaking",
+        /*autoChooser.addOption("tweaking",
             llController.alignRobotAllAxis ({ LimeLightChoice.Right }, { llController.getRightLLSetpoints(ArmPoses.BackL4) })
                 .until { llController.isAtSetPoint(LimeLightChoice.Right, llController.getRightLLSetpoints(ArmPoses.BackL4)) }
-                .andThen(drive.stopCommand()))
+                .andThen(drive.stopCommand()))*/
 
 
             //WaitUntilCommand { llController.isAtSetPoint(LimeLightChoice.Right, Pair(Units.Centimeters.of(32.0), Units.Centimeters.of(-2.7))) }
@@ -234,7 +236,7 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         //autoChooser.addOption("RightAuto", PathPlannerAuto("Right Auto"))
         //autoChooser.addOption("LeftAuto", PathPlannerAuto("Left Auto"))
         //autoChooser.addOption("CenterAuto", PathPlannerAuto("Center Auto"))
-        autoChooser.addOption("CenterAuto",
+        /*autoChooser.addOption("CenterAuto",
             Commands.sequence(
                 Commands.waitTime(1.5.seconds),
                 Commands.runOnce({llController.setFilterIds(arrayOf(10, 21));}),
@@ -253,7 +255,7 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                 Commands.waitUntil { !armSystem.intake.hasCoral() },
                 Commands.waitTime(0.35.seconds),
                 armSystem.disableCoralIntake(),
-                armSystem.setPoseAutoCommand(ArmPoses.BackL2, ArmOrders.JEW.order)))
+                armSystem.setPoseAutoCommand(ArmPoses.BackL2, ArmOrders.JEW.order)))*/
 
         tab.add("Autonomous Chooser", autoChooser)
         SmartDashboard.putData(autoChooser)

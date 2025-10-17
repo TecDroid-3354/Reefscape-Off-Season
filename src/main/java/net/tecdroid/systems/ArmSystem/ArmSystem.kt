@@ -453,7 +453,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
 
                     // angle to climb is 33.5 deg
                     // made to go 6deg inside
-                    States.ClimbState -> Commands.run({ climber.setAngle(40.0.degrees) })
+                    States.ClimbState -> Commands.none()
                 })
             })
         )
@@ -538,7 +538,7 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Dist
 
                 States.ScoreState -> Commands.none()
 
-                States.ClimbState -> Commands.run({ climber.setAngle(80.0.degrees) })
+                States.ClimbState -> setPoseCommand(ArmPoses.CoralFloorIntake, ArmOrders.EJW.order)
             })
         }))
 
