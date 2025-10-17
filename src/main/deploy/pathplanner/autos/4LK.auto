@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "C1-LK-bargeToReef"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C1-LK-bargeToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
           }
         },
         {
@@ -17,21 +30,41 @@
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "C2-LK-reefToCoralStation"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C2-LK-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "FeedCoralStation"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "C2-LK-coralStationToReef"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C2-LK-coralStationToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
           }
         },
         {
@@ -41,21 +74,41 @@
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "C3-LK-reefToCoralStation"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C3-LK-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "FeedCoralStation"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "C3-LK-coralStationToReef"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C3-LK-coralStationToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
           }
         },
         {
@@ -65,27 +118,53 @@
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "C4-LK-reefToCoralStation"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C4-LK-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "FeedCoralStation"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "C4-LK-coralStationToReef"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C4-LK-coralStationToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
             "name": "L3-AlignScoreRightBranch"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ArmCoralStationPoseEJW"
           }
         }
       ]
