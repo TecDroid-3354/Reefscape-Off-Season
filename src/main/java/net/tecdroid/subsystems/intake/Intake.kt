@@ -87,7 +87,7 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
             ))
 
         hasAlgaeTrigger.and { DriverStation.isTeleop() }
-            .onTrue(InstantCommand({ setAlgaeVoltage(1.0.volts) }))
+            .onTrue(InstantCommand({ setAlgaeVoltage((-1.0).volts) }))
     }
 
     /**
@@ -232,7 +232,7 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
 
     override fun initSendable(builder: SendableBuilder) {
         with (builder) {
-            addDoubleProperty("Intake algae motor amperage with 12V ", { algaeMotorController.supplyCurrent.value.`in`(Amps) }, {})
+            addDoubleProperty("Intake algae motor amperage", { algaeMotorController.supplyCurrent.value.`in`(Amps) }, {})
         }
     }
 }
