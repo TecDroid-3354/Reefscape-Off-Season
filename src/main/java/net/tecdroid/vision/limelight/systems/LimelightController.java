@@ -45,7 +45,7 @@ public class LimelightController {
     private final Pair<Distance, Distance> backLeftLLSetpoints = new Pair<>(Centimeters.of(33.5), Centimeters.of(2.5));
     /** Setpoints for the back right camera as follows: Pair<FrontalDistance, HorizontalDistance> */
     private final Pair<Distance, Distance> backRightLLSetpoints = new Pair<>(Centimeters.of(33.5), Centimeters.of(-2.5));
-    private final Distance positionTolerance = Centimeters.of(1.5);
+    private final Distance positionTolerance = Centimeters.of(1.0);
 
     /** Chassis: 27.5in * 27.5in; Center: 27.5in / 2 = 13.75in; Bumpers = 3.25in
      * back LL: LLForward = -0.1905m; back LL lens to end of bumper: (Center + Bumpers) - LLForward = 24.13cm
@@ -157,7 +157,8 @@ public class LimelightController {
         Distance forwardSetpoint = backRightLLSetpoints.getFirst();
 
         Distance forwardOffset = switch (pose) {
-            case BackL2 -> forwardSetpoint.plus(Centimeters.of(6.0)); // TODO() = Match the 8.5 of left?
+            case BackL2 -> forwardSetpoint.plus(Centimeters.of(8.5)); // TODO() = Match the 8.5 of left?
+            case BackL4 -> forwardSetpoint.plus(Centimeters.of(1.0));
             default -> forwardSetpoint;
         };
 
@@ -170,6 +171,7 @@ public class LimelightController {
 
         Distance forwardOffset = switch (pose) {
             case BackL2 -> forwardSetpoint.plus(Centimeters.of(8.5));
+            case BackL4 -> forwardSetpoint.plus(Centimeters.of(1.0));
             default -> forwardSetpoint;
         };
         return new Pair<Distance, Distance>(forwardOffset, horizontalOffset);

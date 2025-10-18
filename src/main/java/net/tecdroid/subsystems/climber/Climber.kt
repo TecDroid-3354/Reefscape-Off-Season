@@ -122,13 +122,14 @@ class Climber :
      * Negative Voltage: Wrist moving towards the center of the robot.
      */
     override fun setVoltage(voltage: Voltage) {
-        if (angle >= config.measureLimits.relativeMaximum && voltage.gt(0.0.volts)) {
+        /*if (angle >= config.measureLimits.relativeMaximum && voltage.lt(0.0.volts)) {
             wristController.stopMotor()
-        } else if (angle <= config.measureLimits.relativeMinimum && voltage.lt(0.0.volts)) {
+        } else if (angle <= config.measureLimits.relativeMinimum && voltage.gt(0.0.volts)) {
             wristController.stopMotor()
         } else {
             wristController.setControl(VoltageOut(voltage))
-        }
+        }*/
+        wristController.setControl(VoltageOut(voltage))
     }
 
     /**

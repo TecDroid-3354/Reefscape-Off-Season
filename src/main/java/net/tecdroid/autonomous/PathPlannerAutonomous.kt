@@ -118,8 +118,7 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                                 LimeLightChoice.Right,
                                 llController.getRightLLSetpoints(ArmPoses.BackL4)
                             )
-                        }
-                        .andThen(drive.stopCommand()),
+                        },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order),
                 ).withTimeout(1.67.seconds),
 
@@ -159,8 +158,7 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
             Commands.sequence(
                 ParallelCommandGroup(
                     llController.alignRobotAllAxis ({ LimeLightChoice.Left }, { llController.getLeftLLSetpoints(ArmPoses.BackL4) })
-                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getLeftLLSetpoints(ArmPoses.BackL4)) }
-                        .andThen(drive.stopCommand()),
+                        .until { llController.isAtSetPoint(LimeLightChoice.Left, llController.getLeftLLSetpoints(ArmPoses.BackL4)) },
                     armSystem.setPoseAutoCommand(ArmPoses.BackL4, ArmOrders.JEW.order),
                 ).withTimeout(1.67.seconds),
 
@@ -208,19 +206,36 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
                 WaitCommand(0.1.seconds)
             )
             )
+
+        registerNamedCommand("grabCoralFromGround",
+            Commands.sequence(
+                armSystem.setPoseCommand(PoseCommands.CoralFloorIntake),
+                ParallelCommandGroup(
+                    armSystem.enableAlgaeIntake(),
+                    armSystem.enableCoralIntake()
+                ),
+                WaitUntilCommand { armSystem.hasCoral() },
+                ParallelCommandGroup(
+                    armSystem.disableCoralIntake(),
+                    armSystem.disableAlgaeIntake(),
+                    armSystem.setPoseCommand(PoseCommands.Passive)
+                )
+            )
+            )
     }
 
     private fun autoChooserOptions() {
         val tab = Shuffleboard.getTab("Driver Tab")
         autoChooser.setDefaultOption("None", Commands.none())
 
-        autoChooser.addOption("Straight Forward", resetPoseAndGetPathFollowingCommand("Straightforward"))
-        autoChooser.addOption("C1-CD-bargeToReef", resetPoseAndGetPathFollowingCommand("C1-CD-bargeToReef"))
-        autoChooser.addOption("4LK", PathPlannerAuto("4LK"))
-        autoChooser.addOption("4CD", PathPlannerAuto("4CD"))
+        //autoChooser.addOption("Straight Forward", resetPoseAndGetPathFollowingCommand("Straightforward"))
+        //autoChooser.addOption("C1-CD-bargeToReef", resetPoseAndGetPathFollowingCommand("C1-CD-bargeToReef"))
+        //autoChooser.addOption("4LK", PathPlannerAuto("4LK"))
+        //autoChooser.addOption("4CD", PathPlannerAuto("4CD"))
         autoChooser.addOption("4 Izquierda ILKJ", PathPlannerAuto("4 Izquierda"))
         autoChooser.addOption("4 Derecha FDCE", PathPlannerAuto("4 Derecha"))
-
+        autoChooser.addOption("1 Derecha", PathPlannerAuto("1 Derecha"))
+        autoChooser.addOption("Atrás 4 Izq", PathPlannerAuto("1 Izquierda"))
 
         autoChooser.addOption("MarcoEsClave", PathPlannerAuto("MarcoEsClave"))
         /*autoChooser.addOption("tweaking",
