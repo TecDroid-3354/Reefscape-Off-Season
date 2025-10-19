@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand
 import edu.wpi.first.wpilibj2.command.button.Trigger
 import net.tecdroid.subsystems.util.generic.LoggableSubsystem
 import net.tecdroid.subsystems.util.generic.TdSubsystem
+import net.tecdroid.util.hertz
 import net.tecdroid.util.inches
 import net.tecdroid.util.seconds
 import net.tecdroid.util.volts
@@ -197,6 +198,27 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
 
         }
 
+        with(coralRightMotorController) {
+            motorVoltage.setUpdateFrequency(25.0.hertz)
+            position.setUpdateFrequency(25.0.hertz)
+            velocity.setUpdateFrequency(25.0.hertz)
+            optimizeBusUtilization()
+        }
+
+        with(coralLeftMotorController) {
+            motorVoltage.setUpdateFrequency(25.0.hertz)
+            position.setUpdateFrequency(25.0.hertz)
+            velocity.setUpdateFrequency(25.0.hertz)
+            optimizeBusUtilization()
+        }
+
+        /*with(algaeMotorController) {
+            motorVoltage.setUpdateFrequency(100.0.hertz)
+            position.setUpdateFrequency(50.0.hertz)
+            velocity.setUpdateFrequency(50.0.hertz)
+            optimizeBusUtilization()
+        }*/
+
         algaeMotorController.clearStickyFaults()
         coralRightMotorController.clearStickyFaults()
         coralLeftMotorController.clearStickyFaults()
@@ -206,7 +228,6 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
             config.algaeMotorDirection.toInvertedValue()
         ))
 
-        // No follower: cada motor puede recibir voltaje distinto
     }
 
     /**

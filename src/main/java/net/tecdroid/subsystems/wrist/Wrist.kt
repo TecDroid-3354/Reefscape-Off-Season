@@ -35,7 +35,8 @@ class Wrist(isClimbStateActive: BooleanSupplier) :
         port = config.absoluteEncoderPort,
         offset = config.absoluteEncoderOffset,
         inverted = config.absoluteEncoderIsInverted,
-        brand = config.absoluteEncoderBrand
+        brand = config.absoluteEncoderBrand,
+        canBusName = "rio"
     )
 
     override val forwardsRunningCondition  = { angle < config.measureLimits.relativeMaximum }

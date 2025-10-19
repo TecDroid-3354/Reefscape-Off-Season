@@ -235,7 +235,7 @@ class PathPlannerAutonomous(val drive: Drive, private val llController: Limeligh
         autoChooser.addOption("4 Izquierda ILKJ", PathPlannerAuto("4 Izquierda"))
         autoChooser.addOption("4 Derecha FDCE", PathPlannerAuto("4 Derecha"))
         autoChooser.addOption("1 Derecha", PathPlannerAuto("1 Derecha"))
-        autoChooser.addOption("Atrás 4 Izq", PathPlannerAuto("1 Izquierda"))
+        autoChooser.addOption("1 izq", PathPlannerAuto("1 Izquierda"))
 
         autoChooser.addOption("MarcoEsClave", PathPlannerAuto("MarcoEsClave"))
         /*autoChooser.addOption("tweaking",

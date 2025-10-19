@@ -16,8 +16,8 @@ enum class ThroughBoreBrand { WCP, REV }
 sealed interface ThroughBore { fun getAbsoluteReading() : Angle }
 
 /* For WCP ThroughBore 'By CANcoder'. Is literally a CANcoder */
-private class WCPThroughBore(port: NumericId) : ThroughBore {
-    private val encoder = CANcoder(port.id)
+private class WCPThroughBore(port: NumericId, canBusName: String) : ThroughBore {
+    private val encoder = CANcoder(port.id, canBusName)
     override fun getAbsoluteReading(): Angle { return encoder.absolutePosition.value }
 }
 
@@ -31,9 +31,9 @@ private class REVThroughBore(port: NumericId) : ThroughBore {
 /* --> Actual Wrapper <-- */
 /* ---------------------- */
 class ThroughBoreAbsoluteEncoder(port: NumericId, private val offset: Angle, private val inverted: Boolean,
-                                 private val brand: ThroughBoreBrand) {
+                                 private val brand: ThroughBoreBrand, canBusName: String) {
     private val encoder: ThroughBore = when (brand) {
-        ThroughBoreBrand.WCP -> WCPThroughBore(port)
+        ThroughBoreBrand.WCP -> WCPThroughBore(port, canBusName)
         ThroughBoreBrand.REV -> REVThroughBore(port)
     }
 

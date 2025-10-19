@@ -21,6 +21,8 @@ import net.tecdroid.subsystems.util.generic.TdSubsystem
 import net.tecdroid.subsystems.util.generic.VoltageControlledSubsystem
 import net.tecdroid.subsystems.util.generic.WithThroughBoreAbsoluteEncoder
 import net.tecdroid.util.degrees
+import net.tecdroid.util.hertz
+import net.tecdroid.util.inches
 import net.tecdroid.util.volts
 import net.tecdroid.wrappers.ThroughBoreAbsoluteEncoder
 import kotlin.math.abs
@@ -32,15 +34,16 @@ class Climber :
     AngularSubsystem,
     VoltageControlledSubsystem  {
     private val config = climberConfig
-    private val wristController = TalonFX(config.wristMotorControllerId.id)
-    private val rollersController = TalonFX(config.rollersMotorControllerId.id)
-    private var target : Angle
+    private val wristController = TalonFX(config.wristMotorControllerId.id, "canivore")
+    private val rollersController = TalonFX(config.rollersMotorControllerId.id, "canivore")
+    private lateinit var target : Angle
 
     override val absoluteEncoder = ThroughBoreAbsoluteEncoder(
         port = config.absoluteEncoderPort,
         offset = config.absoluteEncoderOffset,
         inverted = config.absoluteEncoderIsInverted,
-        brand = config.absoluteEncoderBrand
+        brand = config.absoluteEncoderBrand,
+        canBusName = ""
     )
 
     override val forwardsRunningCondition  = { angle < config.measureLimits.relativeMaximum }
@@ -94,22 +97,6 @@ class Climber :
     override fun setAngle(targetAngle: Angle, slot: Int) {
         // Do not need other slot
         setAngle(targetAngle)
-    }
-
-    fun setRawAngle(targetAngle: Angle, voltage: Voltage) {
-        var error: Double
-        val tolerance = 2.0.degrees
-        var canClimb = true
-        while (canClimb) {
-            error = abs(targetAngle.`in`(Degrees) - angle.`in`(Degrees))
-            // tab.addDouble("Error") {  }
-            setVoltage(if (targetAngle > angle) -voltage else voltage)
-            if (error <= tolerance.`in`(Degrees)) {
-                canClimb = false
-                setVoltage(0.0.volts)
-                break
-            }
-        }
     }
 
     /**
@@ -195,6 +182,13 @@ class Climber :
         with(rollersTalonConfig) {
             MotorOutput
                 .withInverted(config.rollersMotorDirection.toInvertedValue())
+        }
+
+        with(wristController) {
+            position.setUpdateFrequency(25.0.hertz)
+            motorVoltage.setUpdateFrequency(25.0.hertz)
+            velocity.setUpdateFrequency(25.0.hertz)
+            optimizeBusUtilization()
         }
 
 

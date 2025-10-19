@@ -27,8 +27,8 @@ class ElevatorJoint:
     WithThroughBoreAbsoluteEncoder {
 
     private val config = elevatorJointConfig
-    private val leadMotorController = TalonFX(config.leadMotorControllerId.id)
-    private val followerMotorController = TalonFX(config.followerMotorControllerId.id)
+    private val leadMotorController = TalonFX(config.leadMotorControllerId.id, "canivore")
+    private val followerMotorController = TalonFX(config.followerMotorControllerId.id, "canivore")
     private var target: Angle
 
     override val absoluteEncoder =
@@ -36,7 +36,8 @@ class ElevatorJoint:
             port = config.absoluteEncoderPort,
             offset = config.absoluteEncoderOffset,
             inverted = config.absoluteEncoderIsInverted,
-            brand = config.absoluteEncoderBrand
+            brand = config.absoluteEncoderBrand,
+            canBusName = "canivore"
         )
 
     override val forwardsRunningCondition  = { angle < config.measureLimits.relativeMaximum }
