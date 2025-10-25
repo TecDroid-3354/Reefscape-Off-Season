@@ -216,7 +216,7 @@ class RobotContainer {
 
 
     fun robotPeriodic() {
-        advantageScopeLogs()
+        //advantageScopeLogs()
 
 //        try {
 //            if (llController.hasTarget(LimeLightChoice.Left)) {
