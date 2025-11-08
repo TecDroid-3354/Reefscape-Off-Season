@@ -44,7 +44,7 @@ val elevatorJointConfig = ElevatorJointConfig(
     absoluteEncoderOffset = 0.161376953125.rotations - 58.1.degrees,
     absoluteEncoderBrand = ThroughBoreBrand.WCP,
 
-    reduction = Reduction(360.0),
+    reduction = Reduction(216.0),
 
     measureLimits = MeasureLimits(
         absoluteMinimum = 0.0.degrees,

@@ -165,7 +165,7 @@ public class SwerveTunerConstants {
     private static final int kFrontLeftDriveMotorId = 21;
     private static final int kFrontLeftSteerMotorId = 22;
     private static final int kFrontLeftEncoderId = 23;
-    private static final Angle kFrontLeftEncoderOffset = Rotations.of(0.113037109375);
+    private static final Angle kFrontLeftEncoderOffset = Rotations.of(0.113037109375).plus(Degrees.of(180.0));
     private static final boolean kFrontLeftSteerMotorInverted = true;
     private static final boolean kFrontLeftEncoderInverted = false;
 
@@ -176,7 +176,7 @@ public class SwerveTunerConstants {
     private static final int kFrontRightDriveMotorId = 11;
     private static final int kFrontRightSteerMotorId = 12;
     private static final int kFrontRightEncoderId = 13;
-    private static final Angle kFrontRightEncoderOffset = Rotations.of(-0.104736328125);
+    private static final Angle kFrontRightEncoderOffset = Rotations.of(-0.104736328125).minus(Degrees.of(180.0));
     private static final boolean kFrontRightSteerMotorInverted = true;
     private static final boolean kFrontRightEncoderInverted = false;
 

@@ -11,21 +11,16 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.SendableBuilder
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
-import edu.wpi.first.wpilibj2.command.button.Trigger
+import net.tecdroid.constants.Constants
 import net.tecdroid.subsystems.util.generic.AngularSubsystem
 import net.tecdroid.subsystems.util.generic.LoggableSubsystem
 import net.tecdroid.subsystems.util.generic.TdSubsystem
 import net.tecdroid.subsystems.util.generic.VoltageControlledSubsystem
 import net.tecdroid.subsystems.util.generic.WithThroughBoreAbsoluteEncoder
-import net.tecdroid.util.degrees
 import net.tecdroid.util.hertz
-import net.tecdroid.util.inches
-import net.tecdroid.util.volts
 import net.tecdroid.wrappers.ThroughBoreAbsoluteEncoder
-import kotlin.math.abs
 
 class Climber :
     TdSubsystem("Climber"),
@@ -34,8 +29,8 @@ class Climber :
     AngularSubsystem,
     VoltageControlledSubsystem  {
     private val config = climberConfig
-    private val wristController = TalonFX(config.wristMotorControllerId.id, "canivore")
-    private val rollersController = TalonFX(config.rollersMotorControllerId.id, "canivore")
+    private val wristController = TalonFX(config.wristMotorControllerId.id, Constants.ALTERNATE_CANBUS_NAME)
+    private val rollersController = TalonFX(config.rollersMotorControllerId.id, Constants.ALTERNATE_CANBUS_NAME)
     private lateinit var target : Angle
 
     override val absoluteEncoder = ThroughBoreAbsoluteEncoder(
