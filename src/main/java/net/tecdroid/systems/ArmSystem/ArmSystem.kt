@@ -80,7 +80,7 @@ enum class ArmPoses(var pose: ArmPose) {
     BackL3(
         ArmPose(
             wristPosition           = 110.0.degrees,
-            elevatorDisplacement    = 13.25.inches + 0.03.meters,
+            elevatorDisplacement    = 13.25.inches + 0.015.meters,
             elevatorJointPosition   = 90.0.degrees,
             targetCoralVoltage      = 8.0.volts,
             targetAlgaeVoltage      = 8.0.volts
