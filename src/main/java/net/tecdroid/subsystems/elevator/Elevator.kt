@@ -22,8 +22,8 @@ class Elevator :
     VoltageControlledSubsystem
 {
     private val config = elevatorConfig
-    private val leadMotorController = TalonFX(config.leadMotorControllerId.id, "canivore")
-    private val followerMotorController = TalonFX(config.followerMotorId.id, "canivore")
+    private val leadMotorController = TalonFX(config.leadMotorControllerId.id)
+    private val followerMotorController = TalonFX(config.followerMotorId.id)
     private var target: Angle
 
     override val forwardsRunningCondition = { displacement < config.measureLimits.relativeMaximum }

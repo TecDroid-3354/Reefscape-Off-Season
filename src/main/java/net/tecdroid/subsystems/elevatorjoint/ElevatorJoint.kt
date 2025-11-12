@@ -8,13 +8,13 @@ import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.NeutralModeValue
 import edu.wpi.first.units.Units.Degrees
-import edu.wpi.first.units.Units.Rotations
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.SendableBuilder
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import net.tecdroid.constants.Constants
 import net.tecdroid.subsystems.util.generic.*
 import net.tecdroid.wrappers.ThroughBoreAbsoluteEncoder
 
@@ -27,8 +27,8 @@ class ElevatorJoint:
     WithThroughBoreAbsoluteEncoder {
 
     private val config = elevatorJointConfig
-    private val leadMotorController = TalonFX(config.leadMotorControllerId.id, "canivore")
-    private val followerMotorController = TalonFX(config.followerMotorControllerId.id, "canivore")
+    private val leadMotorController = TalonFX(config.leadMotorControllerId.id, Constants.ALTERNATE_CANBUS_NAME)
+    private val followerMotorController = TalonFX(config.followerMotorControllerId.id, Constants.ALTERNATE_CANBUS_NAME)
     private var target: Angle
 
     override val absoluteEncoder =
@@ -37,7 +37,7 @@ class ElevatorJoint:
             offset = config.absoluteEncoderOffset,
             inverted = config.absoluteEncoderIsInverted,
             brand = config.absoluteEncoderBrand,
-            canBusName = "canivore"
+            canBusName = ""
         )
 
     override val forwardsRunningCondition  = { angle < config.measureLimits.relativeMaximum }

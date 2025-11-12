@@ -24,6 +24,7 @@ import net.tecdroid.util.NumericId
  */
 object Constants {
     val driverControllerId = NumericId(0)
+    const val ALTERNATE_CANBUS_NAME = "canivore"
 
     val simMode: Mode = Mode.SIM
     @JvmField
@@ -43,8 +44,7 @@ object Constants {
     @JvmField
     val isFlipped: () -> Boolean =
         {
-            /*DriverStation.getAlliance().isPresent
-                    && DriverStation.getAlliance().get() == Alliance.Red*/
-            true
+            DriverStation.getAlliance().isPresent
+                    && DriverStation.getAlliance().get() == Alliance.Red
         }
 }
