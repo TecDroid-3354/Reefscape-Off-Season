@@ -75,8 +75,7 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
         ))
         isHorizontallyDetected.and { DriverStation.isTeleop() }
             .onTrue(SequentialCommandGroup(
-                InstantCommand({ horizontalIntake(Pair(8.0.volts, 10.0.volts)) } ),
-                setAlgaeVoltageCommand(0.0.volts)
+                InstantCommand({ horizontalIntake(Pair(8.0.volts, (10.0).volts)) } ),
                 ))
 
         intakingCoralTrigger.and { DriverStation.isTeleop() }.and { hasCoralTrigger.asBoolean.not() }.and { isHorizontallyDetected().not() }
@@ -137,8 +136,8 @@ class Intake(isClimbStateActive: BooleanSupplier) : TdSubsystem("Intake"), Logga
     // coral voltage
     private fun horizontalIntake(voltage: Pair<Voltage, Voltage>) {
         ParallelCommandGroup (
-            InstantCommand({ setCoralVoltage(Pair(voltage.first, voltage.second.unaryMinus())) })
-                .andThen(setAlgaeVoltageCommand(12.0.volts)), // second would invert twice on purpose
+            InstantCommand({ setCoralVoltage(Pair(voltage.first, voltage.second)) })
+                .andThen(setAlgaeVoltageCommand(6.0.volts)), // second would invert twice on purpose
             WaitUntilCommand { config.intakeLeftCanRange.isDetected.value.not() }
                 .andThen({ setCoralVoltage(voltage) })
         )
