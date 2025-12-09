@@ -41,16 +41,16 @@ class RobotContainer {
     private val controller = CompliantXboxController(driverControllerId)
     private var drive: Drive
     private val stateMachine = StateMachine(States.MarcoState)
-    private val arm = ArmSystem(stateMachine, ::limeLightIsAtSetPoint, controller)
-    private val llController: LimelightController
+    private val arm = ArmSystem(stateMachine, {indifferent_parameter -> false}, controller)
+    //private val llController: LimelightController
     //private val pathPlannerAutonomous: PathPlannerAutonomous
     private val swerveRotationLockSystem: SwerveRotationLockSystem
-    private val reefAppListener: ReefAppListener
+    //private val reefAppListener: ReefAppListener
 
     private val xLimelightToAprilTagSetPoint = 0.315
     private val yLimelightToAprilTagSetPoint = 0.035
     private val visionStdDev = VecBuilder.fill(.5, .5, .2)
-    private val pathPlannerAutonomous: PathPlannerAutonomous
+    //private val pathPlannerAutonomous: PathPlannerAutonomous
 
     private var autoLevelSelectorMode = true
 
@@ -90,17 +90,17 @@ class RobotContainer {
                         object : ModuleIO {})
         }
 
-        llController = LimelightController(
-            drive,
-            { chassisSpeeds -> drive.runVelocity(chassisSpeeds) },
-            { drive.rotation.degrees }, drive.maxSwerveSpeeds.times(0.75))
-        llController.shuffleboardData()
+//        llController = LimelightController(
+//            drive,
+//            { chassisSpeeds -> drive.runVelocity(chassisSpeeds) },
+//            { drive.rotation.degrees }, drive.maxSwerveSpeeds.times(0.75))
+//        llController.shuffleboardData()
         arm.publishShuffleBoardData()
         arm.assignCommands()
 
         swerveRotationLockSystem = SwerveRotationLockSystem(drive, controller)
-        reefAppListener = ReefAppListener(llController)
-        pathPlannerAutonomous = PathPlannerAutonomous(drive, llController, arm)
+        //reefAppListener = ReefAppListener(llController)
+        //pathPlannerAutonomous = PathPlannerAutonomous(drive, llController, arm)
 
         /*States.ScoreState.setDefaultCommand(arm.scoringSequence(arm.targetPose, ArmOrders.JEW.order)
             .onlyIf { limeLightIsAtSetPoint(0.05.meters, arm.targetPose) })*/
@@ -108,19 +108,19 @@ class RobotContainer {
 
 
     fun autonomousInit() {
-        llController.setThrottle(0)
+        //llController.setThrottle(0)
         drive.removeDefaultCommand()
     }
 
     fun disableInit() {
-        llController.setThrottle(150)
+        //llController.setThrottle(150)
         controller.a().and { DriverStation.isDisabled() }.onTrue(arm.setAllCoast())
         controller.b().and { DriverStation.isDisabled() }.onTrue(arm.setAllBrake())
     }
 
     fun teleopInit() {
         arm.setAllBrake()
-        llController.setThrottle(0)
+        //llController.setThrottle(0)
 
 //        controller.a().onTrue(InstantCommand({ arm.climber.setRawAngle(140.0.degrees, 12.0.volts) }))
 ////        //controller.x().onTrue(InstantCommand({ arm.climber.setAngle(140.0.degrees) }))
@@ -154,10 +154,10 @@ class RobotContainer {
             DoubleSupplier { -controller.getLeftX() * 0.8 },
             DoubleSupplier { controller.getRightX() * 0.6 })
 
-        controller.rightTrigger().whileTrue(llController
-            .alignRobotAllAxis({ Right }) { llController.getRightLLSetpoints(arm.targetPose) })
-        controller.leftTrigger().whileTrue(llController
-            .alignRobotAllAxis({ Left }) { llController.getLeftLLSetpoints(arm.targetPose) })
+//        controller.rightTrigger().whileTrue(llController
+//            .alignRobotAllAxis({ Right }) { llController.getRightLLSetpoints(arm.targetPose) })
+//        controller.leftTrigger().whileTrue(llController
+//            .alignRobotAllAxis({ Left }) { llController.getLeftLLSetpoints(arm.targetPose) })
 
         // Auto Level Selector
 
@@ -191,28 +191,28 @@ class RobotContainer {
         robotPosePublisher.set(drive.pose)
     }
 
-    fun limeLightIsAtSetPoint(limeLightChoice: LimeLightChoice): Boolean {
-        return when (limeLightChoice) {
-            Right -> llController.isAtSetPoint(Right, llController.getRightLLSetpoints(arm.currentPose))
-            Left -> llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(arm.currentPose))
-            Front -> llController.isAtSetPoint(Front, llController.getRightLLSetpoints(arm.currentPose)) ||
-                    llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(arm.currentPose))
-        }
-    }
-
-    fun limeLightIsAtSetPoint(tolerance: Distance): Boolean {
-         return llController.isAtSetPoint(Front, llController.getRightLLSetpoints(arm.currentPose), tolerance) ||
-                llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(arm.currentPose), tolerance) ||
-                llController.isAtSetPoint(Right, llController.getRightLLSetpoints(arm.currentPose), tolerance) ||
-                llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(arm.currentPose), tolerance)
-    }
-
-    fun limeLightIsAtSetPoint(tolerance: Distance, armPose: ArmPoses): Boolean {
-        return llController.isAtSetPoint(Front, llController.getRightLLSetpoints(armPose), tolerance) ||
-                llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(armPose), tolerance) ||
-                llController.isAtSetPoint(Right, llController.getRightLLSetpoints(armPose), tolerance) ||
-                llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(armPose), tolerance)
-    }
+//    fun limeLightIsAtSetPoint(limeLightChoice: LimeLightChoice): Boolean {
+//        return when (limeLightChoice) {
+//            Right -> llController.isAtSetPoint(Right, llController.getRightLLSetpoints(arm.currentPose))
+//            Left -> llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(arm.currentPose))
+//            Front -> llController.isAtSetPoint(Front, llController.getRightLLSetpoints(arm.currentPose)) ||
+//                    llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(arm.currentPose))
+//        }
+//    }
+//
+//    fun limeLightIsAtSetPoint(tolerance: Distance): Boolean {
+//         return llController.isAtSetPoint(Front, llController.getRightLLSetpoints(arm.currentPose), tolerance) ||
+//                llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(arm.currentPose), tolerance) ||
+//                llController.isAtSetPoint(Right, llController.getRightLLSetpoints(arm.currentPose), tolerance) ||
+//                llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(arm.currentPose), tolerance)
+//    }
+//
+//    fun limeLightIsAtSetPoint(tolerance: Distance, armPose: ArmPoses): Boolean {
+//        return llController.isAtSetPoint(Front, llController.getRightLLSetpoints(armPose), tolerance) ||
+//                llController.isAtSetPoint(Front, llController.getLeftLLSetpoints(armPose), tolerance) ||
+//                llController.isAtSetPoint(Right, llController.getRightLLSetpoints(armPose), tolerance) ||
+//                llController.isAtSetPoint(Left, llController.getLeftLLSetpoints(armPose), tolerance)
+//    }
 
 
     fun robotPeriodic() {
@@ -245,6 +245,6 @@ class RobotContainer {
     }
 
     val autonomousCommand: Command
-        get() = pathPlannerAutonomous.selectedAutonomousRoutine
+        get() = Commands.none()//pathPlannerAutonomous.selectedAutonomousRoutine
 
 }
