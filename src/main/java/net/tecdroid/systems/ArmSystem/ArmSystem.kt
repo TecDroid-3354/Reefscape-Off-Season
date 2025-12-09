@@ -8,14 +8,17 @@ import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.Sendable
 import edu.wpi.first.util.sendable.SendableBuilder
-import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.InstantCommand
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand
+import edu.wpi.first.wpilibj2.command.button.Trigger
 import net.tecdroid.input.CompliantXboxController
+import net.tecdroid.subsystems.climber.Climber
 import net.tecdroid.subsystems.elevator.Elevator
 import net.tecdroid.subsystems.elevatorjoint.ElevatorJoint
 import net.tecdroid.subsystems.intake.Intake
@@ -34,7 +37,8 @@ data class ArmPose(
     var wristPosition: Angle,
     var elevatorDisplacement: Distance,
     var elevatorJointPosition: Angle,
-    val targetVoltage: Voltage,
+    val targetCoralVoltage: Voltage,
+    val targetAlgaeVoltage: Voltage,
 )
 data class ArmOrder(
     val first: ArmMember,
@@ -45,109 +49,132 @@ data class ArmOrder(
 enum class ArmPoses(var pose: ArmPose) {
     Passive(
         ArmPose(
-        wristPosition         = 0.021.rotations + 5.0.degrees,
-        elevatorDisplacement  = 0.01.meters,
-        elevatorJointPosition = 0.25.rotations + 3.5.degrees,
-        targetVoltage = 0.0.volts
+            wristPosition           = 110.0.degrees,
+            elevatorDisplacement    = 0.0.inches,
+            elevatorJointPosition   = 60.0.degrees,
+            targetCoralVoltage      = 0.0.volts,
+            targetAlgaeVoltage      = 0.0.volts,
     )
     ),
 
-    L1(
+    BackL2(
         ArmPose(
-        wristPosition         = 0.3528.rotations - 55.0.degrees,
-        elevatorDisplacement  = 0.01.meters,
-        elevatorJointPosition = 0.263.rotations,
-        targetVoltage = 3.5.volts
+            wristPosition           = 130.0.degrees,
+            elevatorDisplacement    = 0.0.inches,
+            elevatorJointPosition   = 90.0.degrees,
+            targetCoralVoltage      = 8.0.volts,
+            targetAlgaeVoltage      = 8.0.volts
     )
     ),
 
-    L2(
+    BackL2Safe(
         ArmPose(
-        wristPosition         = 0.3528.rotations,
-        elevatorDisplacement  = 0.0367.meters + 0.0125.meters,
-        elevatorJointPosition = 0.263.rotations,
-        targetVoltage = 8.0.volts
+            wristPosition           = 100.0.degrees,
+            elevatorDisplacement    = 0.0.inches,
+            elevatorJointPosition   = 90.0.degrees,
+            targetCoralVoltage      = 8.0.volts,
+            targetAlgaeVoltage      = 8.0.volts
+        )
+    ),
+
+    BackL3(
+        ArmPose(
+            wristPosition           = 110.0.degrees,
+            elevatorDisplacement    = 13.25.inches + 0.015.meters,
+            elevatorJointPosition   = 90.0.degrees,
+            targetCoralVoltage      = 8.0.volts,
+            targetAlgaeVoltage      = 8.0.volts
     )
     ),
 
-    L3(
+    BackL4(
         ArmPose(
-        wristPosition         = 0.3528.rotations - 0.5.degrees,
-        elevatorDisplacement  = 0.4281.meters,
-        elevatorJointPosition = 0.263.rotations, //elevatorJointPosition = 0.25.rotations + 3.5.degrees,
-        targetVoltage = 7.0.volts
-    )
-    ),
-
-    L4(
-        ArmPose(
-        wristPosition         = 0.3528.rotations,
-        elevatorDisplacement  = 1.0283.meters,
-        elevatorJointPosition = 0.263.rotations, //0.25.rotations + 3.5.degrees,
-        targetVoltage = 8.0.volts
+            wristPosition           = 130.0.degrees,
+            elevatorDisplacement    = 40.3.inches,
+            elevatorJointPosition   = 91.0.degrees,
+            targetCoralVoltage      = 8.0.volts,
+            targetAlgaeVoltage      = 8.0.volts
     )
     ),
 
     CoralStation(
         ArmPose(
-        wristPosition         = 0.3601.rotations + 2.5.degrees,
-        elevatorDisplacement  = 0.01.meters,
-        elevatorJointPosition = 0.1622.rotations + 10.5.degrees,
-        targetVoltage = 9.0.volts
+            wristPosition           = (-22.5).degrees,
+            elevatorDisplacement    = 0.17.meters,
+            elevatorJointPosition   = 70.0.degrees,
+            targetCoralVoltage      = 3.75.volts,
+            targetAlgaeVoltage      = 3.75.volts
     )
     ),
 
     A1(
         ArmPose(
-        wristPosition         = 0.2798.rotations,
-        elevatorDisplacement  = 0.1457.meters,
-        elevatorJointPosition = 0.1772.rotations - 1.5.degrees,
-        targetVoltage = 12.0.volts
+            wristPosition           = (-54.0).degrees,
+            elevatorDisplacement    = 0.195.meters,
+            elevatorJointPosition   = 65.834.degrees,
+            targetCoralVoltage      = 0.0.volts,
+            targetAlgaeVoltage      = 8.0.volts
     )
     ),
 
     A2(
         ArmPose(
-        wristPosition         = 0.2628.rotations,
-        elevatorDisplacement  = 0.4920.meters,
-        elevatorJointPosition = 0.1968.rotations - 1.5.degrees,
-        targetVoltage = 12.0.volts
+            wristPosition           = (-32.218).degrees,
+            elevatorDisplacement    = 0.42.meters,
+            elevatorJointPosition   = 69.262.degrees,
+            targetCoralVoltage      = 0.0.volts,
+            targetAlgaeVoltage      = 8.0.volts
     )
     ),
 
     Processor(
         ArmPose(
-        wristPosition         = 0.3705.rotations,
-        elevatorDisplacement  = 0.0150.meters,
-        elevatorJointPosition = 0.0415.rotations + 5.0.degrees,
-        targetVoltage = 8.0.volts
+            wristPosition           = 0.3705.rotations,
+            elevatorDisplacement    = 0.0.meters,
+            elevatorJointPosition   = 0.4437.degrees,
+            targetCoralVoltage      = 0.0.volts,
+            targetAlgaeVoltage      = 4.0.volts
     )
     ),
 
     AlgaeFloorIntake(
         ArmPose(
-        wristPosition         = 0.3705.rotations - 24.0.degrees,
-        elevatorDisplacement  = 0.0150.meters,
-        elevatorJointPosition = 0.0415.rotations,
-        targetVoltage = 8.0.volts
+            wristPosition           = (-35.087).degrees,
+            elevatorDisplacement    = 0.045.meters,
+            elevatorJointPosition   = 14.24.degrees,
+            targetCoralVoltage      = 0.0.volts,
+            targetAlgaeVoltage      = 4.0.volts
     )
     ),
 
-    coralFloorIntake(
+    CoralFloorIntake(
         ArmPose(
-        wristPosition         = 0.358.rotations - 0.5.degrees,
-        elevatorDisplacement  = 0.01.meters,
-        elevatorJointPosition = 0.0153.rotations,
-        targetVoltage = 9.0.volts
+            wristPosition           = 0.0.degrees,
+            elevatorDisplacement    = 0.0.inches,
+            elevatorJointPosition   = 0.1.degrees,
+            targetCoralVoltage      = 6.0.volts,
+            targetAlgaeVoltage      = 12.0.volts
     )
     ),
+
+    CoralFloorIntakeSafe(
+        ArmPose(
+            wristPosition           = 110.0.degrees,
+            elevatorDisplacement    = 0.0.inches,
+            elevatorJointPosition   = 0.5.degrees,
+            targetCoralVoltage      = 6.0.volts,
+            targetAlgaeVoltage      = 12.0.volts
+    )
+    ),
+
 
     Barge(
         ArmPose(
-        wristPosition         = 0.3476.rotations,
-        elevatorDisplacement  = 1.0420.meters,
-        elevatorJointPosition = 0.263.rotations,
-        targetVoltage = 8.0.volts
+            wristPosition           = 5.95.degrees,
+            elevatorDisplacement    = 1.0293.meters,
+            elevatorJointPosition   = 90.0.degrees,
+            targetCoralVoltage      = 0.0.volts,
+            targetAlgaeVoltage      = 8.0.volts
     )
     )
 }
@@ -161,24 +188,36 @@ enum class ArmOrders(val order: ArmOrder) {
     WJE(ArmOrder(ArmWrist, ArmJoint, ArmElevator))
 }
 
-enum class PoseCommands(val pose: ArmPose, val order: ArmOrder) {
-    L4(ArmPoses.L4.pose, ArmOrders.JEW.order),
-    L3(ArmPoses.L3.pose, ArmOrders.JEW.order),
-    L2(ArmPoses.L2.pose, ArmOrders.EJW.order),
-    CoralStation(ArmPoses.CoralStation.pose, ArmOrders.EJW.order),
+enum class PoseCommands(val pose: ArmPoses, val order: ArmOrder) {
+    BackL4(ArmPoses.BackL4, ArmOrders.JEW.order),
+    BackL3(ArmPoses.BackL3, ArmOrders.JEW.order),
+    BackL2(ArmPoses.BackL2, ArmOrders.JEW.order),
+    A1(ArmPoses.A1, ArmOrders.JEW.order),
+    A2(ArmPoses.A2, ArmOrders.JEW.order),
+    AlgaeFloorIntake(ArmPoses.AlgaeFloorIntake, ArmOrders.EJW.order),
+    Barge(ArmPoses.Barge, ArmOrders.JWE.order),
+    CoralFloorIntake(ArmPoses.CoralFloorIntake, ArmOrders.EWJ.order),
+    CoralFloorIntakeSafe(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EWJ.order),
+    CoralStation(ArmPoses.CoralStation, ArmOrders.EJW.order),
+    Processor(ArmPoses.Processor, ArmOrders.EJW.order),
+    Passive(ArmPoses.Passive, ArmOrders.EJW.order),
 }
 
-
-class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Double) -> Boolean) : Sendable {
-    val wrist = Wrist()
+class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Distance) -> Boolean, val controller: CompliantXboxController) : Sendable {
+    val wrist = Wrist(stateMachine.isState(States.ClimbState))
     val elevator = Elevator()
     val joint = ElevatorJoint()
-    val sensor = DigitalInput(3)
-    val intake = Intake(sensor)
+    val climber = Climber()
+    val intake = Intake(stateMachine.isState(States.ClimbState))
 
-    private var targetVoltage = 0.0.volts
+    private var coralTargetVoltage = 0.0.volts
+    private var algaeTargetVoltage = 0.0.volts
 
     var isScoring = false
+    val climbTrigger = Trigger{ controller.leftStick().asBoolean && controller.rightStick().asBoolean && hasCoral().not() }
+
+    var currentPose = ArmPoses.Passive
+    var targetPose = ArmPoses.BackL2
 
     // To change the position orders according to the position of the entire arm
     private var isLow = { false }
@@ -189,20 +228,23 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
     init {
         wrist.matchRelativeEncodersToAbsoluteEncoders()
         joint.matchRelativeEncodersToAbsoluteEncoders()
+        climber.matchRelativeEncodersToAbsoluteEncoders()
     }
 
     fun setJointAngle(angle: Angle): Command = joint.setAngleCommand(angle)
     fun setElevatorDisplacement(displacement: Distance): Command = elevator.setDisplacementCommand(displacement)
     fun setWristAngle(angle: Angle): Command = wrist.setAngleCommand(angle)
 
-    fun enableIntake(): Command = intake.setVoltageCommand { targetVoltage }
-    fun enableIntake(voltage: Double): Command = intake.setVoltageCommand { voltage.volts }
-    fun enableOuttake(): Command = intake.setVoltageCommand { -targetVoltage }
+    fun enableCoralIntake(): Command = intake.setCoralVoltageCommand(coralTargetVoltage)
+    fun enableCoralIntake(voltage: Voltage): Command = intake.setCoralVoltageCommand(voltage)
+    fun enableCoralOuttake(): Command = intake.setCoralVoltageCommand(-coralTargetVoltage)
 
-    // Passive intake in case of Algae State
-    fun disableIntake() : Command = Commands.either(intake.setVoltageCommand { 1.5.volts },
-        intake.setVoltageCommand { 0.0.volts }
-    , stateMachine.isState(States.AlgaeState))
+    fun enableAlgaeIntake(): Command = intake.setAlgaeVoltageCommand(algaeTargetVoltage)
+    fun enableAlgaeIntake(voltage: Voltage): Command = intake.setAlgaeVoltageCommand(voltage)
+    fun enableAlgaeOuttake(): Command = intake.setAlgaeVoltageCommand(-algaeTargetVoltage)
+
+    fun disableCoralIntake() : Command = intake.setCoralVoltageCommand(0.0.volts)
+    fun disableAlgaeIntake() : Command = intake.setAlgaeVoltageCommand(0.0.volts)
 
     private fun getCommandFor(pose: ArmPose, member: ArmMember) : Command = when (member) {
         ArmWrist -> wrist.setAngleCommand(pose.wristPosition).andThen(Commands.waitUntil { wrist.getPositionError() < 50.0.rotations })
@@ -216,44 +258,81 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
         ArmJoint -> joint.setAngleCommand(pose.elevatorJointPosition, slot).andThen(Commands.waitUntil { joint.getPositionError() < 25.0.rotations })
     }
 
-    fun setPoseCommand(pose: ArmPose, order: ArmOrder) : Command {
-        return SequentialCommandGroup(
-            Commands.runOnce({
-                targetVoltage = pose.targetVoltage
-                isScoring = when (pose) {
-                    ArmPoses.L2.pose, ArmPoses.L3.pose, ArmPoses.L4.pose -> true
-                    else -> false
-                }
-            }),
-            getCommandFor(pose, order.first),
-            getCommandFor(pose, order.second),
-            getCommandFor(pose, order.third))
+    fun setPoseCommand(pose: ArmPoses, order: ArmOrder) : Command {
+        return when(currentPose) {
+            // When is in BackL2 to prevent the wires from colliding
+            ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> SequentialCommandGroup(
+                getCommandFor(ArmPoses.BackL2Safe.pose, ArmOrders.WEJ.order.first),
+                Commands.runOnce({
+                    currentPose = pose
+                    coralTargetVoltage = pose.pose.targetCoralVoltage
+                    algaeTargetVoltage = pose.pose.targetAlgaeVoltage
+                    isScoring = when (pose) {
+                        ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> true
+                        else -> false
+                    }
+                }),
+                getCommandFor(pose.pose, order.first),
+                getCommandFor(pose.pose, order.second),
+                getCommandFor(pose.pose, order.third))
+            // rest of cases
+            ArmPoses.Barge -> SequentialCommandGroup(
+                Commands.runOnce({
+                    currentPose = pose
+                    coralTargetVoltage = pose.pose.targetCoralVoltage
+                    algaeTargetVoltage = pose.pose.targetAlgaeVoltage
+                    isScoring = when (pose) {
+                        ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> true
+                        else -> false
+                    }
+                }),
+                getCommandFor(pose.pose, ArmElevator),
+                getCommandFor(pose.pose, ArmWrist),
+                getCommandFor(pose.pose, ArmJoint))
+            else -> SequentialCommandGroup(
+                Commands.runOnce({
+                    currentPose = pose
+                    coralTargetVoltage = pose.pose.targetCoralVoltage
+                    algaeTargetVoltage = pose.pose.targetAlgaeVoltage
+                    isScoring = when (pose) {
+                        ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> true
+                        else -> false
+                    }
+                }),
+                getCommandFor(pose.pose, order.first),
+                getCommandFor(pose.pose, order.second),
+                getCommandFor(pose.pose, order.third))
+        }
     }
 
-    fun setPoseCommand(pose: ArmPose, order: ArmOrder, slot: Int) : Command {
+    fun setPoseCommand(pose: ArmPoses, order: ArmOrder, slot: Int) : Command {
         return SequentialCommandGroup(
             Commands.runOnce({
-                targetVoltage = pose.targetVoltage
+                currentPose = pose
+                coralTargetVoltage = pose.pose.targetCoralVoltage
+                algaeTargetVoltage = pose.pose.targetAlgaeVoltage
                 isScoring = when (pose) {
-                    ArmPoses.L2.pose, ArmPoses.L3.pose, ArmPoses.L4.pose -> true
+                    ArmPoses.BackL2, ArmPoses.BackL3, ArmPoses.BackL4 -> true
                     else -> false
                 }
             }),
-            getCommandFor(pose, order.first, slot),
-            getCommandFor(pose, order.second, slot),
-            getCommandFor(pose, order.third, slot))
+            getCommandFor(pose.pose, order.first, slot),
+            getCommandFor(pose.pose, order.second, slot),
+            getCommandFor(pose.pose, order.third, slot))
     }
 
     fun setPoseCommand(poseCommand: PoseCommands): Command {
         return setPoseCommand(poseCommand.pose, poseCommand.order)
     }
 
-    fun setPoseAutoCommand(pose: ArmPose, order: ArmOrder) : Command {
+    fun setPoseAutoCommand(pose: ArmPoses, order: ArmOrder) : Command {
         return SequentialCommandGroup(
-            Commands.runOnce({ targetVoltage = pose.targetVoltage }),
-            getCommandFor(pose, order.first),
-            getCommandFor(pose, order.second),
-            getCommandFor(pose, order.third),
+            Commands.runOnce({ currentPose = pose }),
+            Commands.runOnce({ coralTargetVoltage = pose.pose.targetCoralVoltage }),
+            Commands.runOnce({ algaeTargetVoltage = pose.pose.targetAlgaeVoltage }),
+            getCommandFor(pose.pose, order.first),
+            getCommandFor(pose.pose, order.second),
+            getCommandFor(pose.pose, order.third),
         )
     }
 
@@ -274,90 +353,101 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
 
     fun publishShuffleBoardData() {
         val tab = Shuffleboard.getTab("Driver Tab")
-        tab.addBoolean("coral", { getSensorRead() })
-        tab.addBoolean("llIsAtSetPoint", { limeLightIsAtSetPoint(0.1)})
+        tab.addBoolean("coral", { hasCoral() })
+        tab.addBoolean("llIsAtSetPoint", { limeLightIsAtSetPoint(0.2.meters)})
         tab.addString("State", { stateMachine.getCurrentState().toString() })
-        tab.addDouble("Target Voltage") { targetVoltage.`in`(Volts) }
+        tab.addDouble("Target Coral Voltage") { coralTargetVoltage.`in`(Volts) }
+        tab.addDouble("Target Algae Voltage") { algaeTargetVoltage.`in`(Volts) }
+        tab.addDouble("Target Wrist Pos") { currentPose.pose.wristPosition.`in`(Degrees) }
+        tab.addString("Current arm pose") { currentPose.toString() }
+        tab.addString("Target arm pose") { targetPose.toString() }
     }
 
-    fun getSensorRead() : Boolean = !sensor.get()
+    fun hasCoral() : Boolean = intake.hasCoral()
 
     fun scoringSequence(pose: PoseCommands): Command {
-        return SequentialCommandGroup(
-            setPoseCommand(pose).andThen(WaitCommand(0.15.seconds)).andThen(enableIntake()),
-            WaitUntilCommand { intake.hasCoral().not() }.andThen(WaitCommand(0.05.seconds)).andThen(disableIntake()),
-            setPoseCommand(PoseCommands.CoralStation)
-        )
+        return setPoseCommand(pose).andThen(WaitCommand(0.5.seconds)).andThen(Commands.runOnce({
+            scheduleCMD(ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
+        }))
     }
 
-    /*fun scoringSequence(pose: PoseCommands): Command {
-        return setPoseCommand(pose).andThen(WaitCommand(0.15.seconds)).andThen(enableIntake())
-    }*/
+    fun scoringSequence(pose: ArmPoses, order: ArmOrder): Command {
+        return setPoseCommand(pose, order).andThen(WaitCommand(0.5.seconds)).andThen(Commands.runOnce({
+            scheduleCMD(ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
+        }))
+    }
 
     fun scoringSequence(pose: () -> PoseCommands): Command {
-        return SequentialCommandGroup(
-            setPoseCommand(pose.invoke()).andThen(WaitCommand(0.15.seconds)).andThen(enableIntake()),
-            WaitUntilCommand { intake.hasCoral().not() }.andThen(WaitCommand(0.05.seconds)).andThen(disableIntake()),
-            setPoseCommand(PoseCommands.CoralStation)
-        )
-    }
-
-    fun changeState() {
-        when(stateMachine.getCurrentState()) {
-            States.AlgaeState -> stateMachine.changeState(States.CoralState)
-            else -> stateMachine.changeState(States.AlgaeState)
-        }
+        return setPoseCommand(pose.invoke()).andThen(WaitCommand(0.5.seconds)).andThen(enableCoralOuttake())
     }
 
     // Used to avoid the one command binding of the trigger, and process the logic out of the trigger command
     private fun scheduleCMD(command: Command) = command.schedule()
 
+    // ! State machine
+
     private fun assignStatesCommands() {
         // Active passive intake
-        States.AlgaeState.setInitialCommand(intake.setVoltageCommand { 1.5.volts })
+
+        States.ScoreState.setInitialCommand(setPoseCommand(PoseCommands.Passive))
 
         // Go to passive position after score a coral
-        /*States.ScoreState.setEndCommand(SequentialCommandGroup(
-            WaitCommand(0.05.seconds),
-            disableIntake(),
-            setPoseCommand(PoseCommands.CoralStation)))*/
+        States.ScoreState.setEndCommand(SequentialCommandGroup(
+            WaitUntilCommand({ hasCoral().not() }),
+            WaitCommand(0.1.seconds),
+            intake.setAlgaeVoltageCommand(0.0.volts),
+            intake.setCoralVoltageCommand(0.0.volts),
+            setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EWJ.order)
+        ))
 
-        // Change state conditions
+        // Set a physical condition for triggering the climb state
+        stateMachine.addCondition({ climbTrigger.asBoolean }, States.ClimbState, Phase.Teleop )
 
         // Change to score state when coral is detected
-        stateMachine.addCondition({ getSensorRead() }, States.ScoreState, Phase.Teleop)
+        stateMachine.addCondition({ hasCoral() }, States.ScoreState, Phase.Teleop)
 
         // Change to coral state if we are in score state, and we just pull out a coral
-        stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !getSensorRead() }, States.CoralState, Phase.Teleop)
-
+        stateMachine.addCondition({ stateMachine.isState(States.ScoreState).invoke() && !hasCoral() },
+            States.MarcoState, Phase.Teleop)
     }
 
-    fun assignCommands(controller: CompliantXboxController) {
+    fun setAllCoast(): Command {
+        return SequentialCommandGroup(
+            wrist.coast(),
+            elevator.coast(),
+            joint.coast(),
+            climber.coast(),
+        ).ignoringDisable(true)
+    }
+
+    fun setAllBrake(): Command {
+        return SequentialCommandGroup(
+            wrist.brake(),
+            elevator.brake(),
+            joint.brake(),
+            climber.brake(),
+        ).ignoringDisable(true)
+    }
+
+    fun assignCommands() {
         assignStatesCommands()
-
-        controller.povLeft().onTrue(
-            Commands.runOnce({changeState()})
-        )
-
         // Y
         controller.y().onTrue(
             Commands.runOnce({
                 scheduleCMD(when(stateMachine.getCurrentState()){
-                    States.ScoreState -> Commands.either(
-                        scoringSequence(PoseCommands.L4),
-                        setPoseCommand(PoseCommands.L4),
-                        { limeLightIsAtSetPoint(0.75) })
+                    States.ScoreState -> Commands.either (
+                        scoringSequence(PoseCommands.BackL4),
+                        Commands.runOnce({ targetPose = ArmPoses.BackL4 }),
+                        { limeLightIsAtSetPoint(0.415.meters) }
+                    )
 
-                    States.CoralState -> setPoseCommand(PoseCommands.L4)
-                    States.IntakeState -> setPoseCommand(PoseCommands.L4)
-                        .andThen({stateMachine.changeState(States.CoralState)})
-                    States.AlgaeState -> Commands.sequence(
-                        enableIntake(2.0),
-                        setPoseCommand(
-                            ArmPoses.Barge.pose,
-                            ArmOrders.JEW.order
-                        ).andThen({ setIsLow(false) }),
-                        disableIntake())
+                    States.MarcoState -> setPoseCommand(PoseCommands.BackL4)
+                    States.IntakeState -> setPoseCommand(PoseCommands.BackL4)
+                        .andThen({stateMachine.changeState(States.MarcoState)})
+
+                    // angle to climb is 33.5 deg
+                    // made to go 6deg inside
+                    States.ClimbState -> Commands.none()
                 })
             })
         )
@@ -365,105 +455,128 @@ class ArmSystem(val stateMachine: StateMachine, val limeLightIsAtSetPoint: (Doub
         // B
         controller.b().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.ScoreState -> Commands.either(
-                    scoringSequence(PoseCommands.L3),
-                    setPoseCommand(PoseCommands.L3),
-                    { limeLightIsAtSetPoint(0.75) })
+                States.ScoreState -> Commands.either (
+                    scoringSequence(PoseCommands.BackL3),
+                    Commands.runOnce({ targetPose = ArmPoses.BackL3 }),
+                    { limeLightIsAtSetPoint(0.445.meters) }
+                )
 
-                States.CoralState -> setPoseCommand(PoseCommands.L3)
-                States.IntakeState -> setPoseCommand(PoseCommands.L3)
-                    .andThen({stateMachine.changeState(States.CoralState)})
-                States.AlgaeState -> Commands.sequence(
-                    enableIntake(2.0),
-                    setPoseCommand(
-                        ArmPoses.A2.pose,
-                        if (isLow()) ArmOrders.JWE.order else ArmOrders.EWJ.order
-                    ).andThen({ setIsLow(false) }),
-                    disableIntake())
+                States.MarcoState -> setPoseCommand(PoseCommands.BackL3)
+                States.IntakeState -> setPoseCommand(PoseCommands.BackL3)
+                    .andThen({stateMachine.changeState(States.MarcoState)})
+                States.ClimbState -> Commands.none()
             })
         }))
 
         // A
         controller.a().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.ScoreState -> Commands.either(
-                    scoringSequence(PoseCommands.L2),
-                    setPoseCommand(PoseCommands.L2),
-                    { limeLightIsAtSetPoint(0.75) })
+                States.ScoreState -> Commands.either (
+                    scoringSequence(PoseCommands.BackL2),
+                    Commands.runOnce({ targetPose = ArmPoses.BackL2 }),
+                    { limeLightIsAtSetPoint((-0.145).meters) }
+                )
 
-                States.CoralState -> setPoseCommand(PoseCommands.L2)
-                States.IntakeState -> setPoseCommand(PoseCommands.L2)
-                    .andThen({stateMachine.changeState(States.CoralState)})
-                States.AlgaeState -> Commands.sequence(
-                    enableIntake(2.0),
-                    setPoseCommand(
-                        ArmPoses.A1.pose,
-                        if (isLow()) ArmOrders.JWE.order else ArmOrders.EWJ.order
-                    ).andThen({ setIsLow(false) }),
-                    disableIntake())
+                States.MarcoState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
+                    .andThen(setPoseCommand(PoseCommands.BackL2))
+
+                States.IntakeState -> setPoseCommand(ArmPoses.BackL2Safe, ArmOrders.EJW.order)
+                    .andThen(setPoseCommand(PoseCommands.BackL2))
+                    .andThen({stateMachine.changeState(States.MarcoState)})
+                States.ClimbState -> Commands.none()
             })
         }))
 
         // X
         controller.x().onTrue(Commands.runOnce({
             scheduleCMD(when(stateMachine.getCurrentState()){
-                States.CoralState -> setPoseCommand(PoseCommands.CoralStation)
-                    .andThen({ setIsLow(true) })
-                    .andThen(Commands.runOnce({ stateMachine.changeState(States.IntakeState)}))
+                States.MarcoState -> SequentialCommandGroup(
 
-                States.IntakeState, States.ScoreState -> setPoseCommand(PoseCommands.CoralStation)
-                    .andThen({ setIsLow(true) })
+                    //TODO: CJ
+                    Commands.runOnce({ stateMachine.changeState(States.IntakeState)}),
+                    setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EWJ.order)
+                )
 
-                States.AlgaeState -> Commands.sequence(
-                    setPoseCommand(
-                        ArmPoses.CoralStation.pose,
-                        ArmOrders.EJW.order
-                    ),
-                    Commands.runOnce({ stateMachine.changeState(States.IntakeState)}))
+                States.IntakeState -> setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EWJ.order)
+
+                States.ScoreState -> Commands.none()
+
+                States.ClimbState -> setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.EWJ.order)
             })
         }))
 
-        // Intake
-        controller.rightBumper().onTrue(Commands.runOnce({
-            scheduleCMD(when(stateMachine.getCurrentState()){
-                States.CoralState -> Commands.parallel(
-                    setPoseCommand(PoseCommands.CoralStation)
-                        .andThen({ setIsLow(true) }),
-                    Commands.runOnce({ stateMachine.changeState(States.IntakeState)}),
-                    enableIntake()
+        controller.rightBumper()
+            .onTrue(Commands.runOnce({scheduleCMD(when (stateMachine.getCurrentState()) {
+
+                            States.ScoreState -> Commands.runOnce({scheduleCMD(
+                                ParallelCommandGroup(enableCoralOuttake(), enableAlgaeOuttake()))
+                            })
+
+                            States.ClimbState -> Commands.runOnce({scheduleCMD(
+                                InstantCommand({climber.setClimberRollersVoltage(12.0.volts)})
+                            )})
+
+                            else -> ParallelCommandGroup(
+                                setPoseCommand(ArmPoses.CoralFloorIntake, ArmOrders.EJW.order),
+                                Commands.runOnce({scheduleCMD(
+                                    ParallelCommandGroup(enableCoralIntake(), enableAlgaeIntake()))
+                            }))
+                        }
+                    )
+                })
+            )
+            .onFalse(Commands.runOnce({
+                scheduleCMD(
+                    when (stateMachine.getCurrentState()) {
+                        States.ScoreState -> Commands.runOnce({scheduleCMD(
+                                ParallelCommandGroup(disableCoralIntake(), disableAlgaeIntake()))
+                        })
+
+                        States.ClimbState -> Commands.runOnce({scheduleCMD(
+                            InstantCommand({climber.setClimberRollersVoltage(0.0.volts)})
+                        )})
+
+                        else -> ParallelCommandGroup(
+                            Commands.runOnce({
+                                scheduleCMD(ParallelCommandGroup(disableCoralIntake(), disableAlgaeIntake()))
+                            }),
+                            setPoseCommand(ArmPoses.CoralFloorIntakeSafe, ArmOrders.WEJ.order)
+                        )
+                    }
                 )
-                else -> enableIntake()
-            })
-        })).onFalse(disableIntake())
+            }))
 
-        // POV down
-        controller.povDown().onTrue(
-            Commands.sequence(
-                enableIntake(3.0),
-                setPoseCommand(ArmPoses.AlgaeFloorIntake.pose, ArmOrders.EWJ.order, 1),
-                disableIntake(),
-                Commands.runOnce({ stateMachine.changeState(States.AlgaeState) })
-            )
+            // ! Analog climber
+        controller.povUp().whileTrue(Commands.run({
+            scheduleCMD(
+                when (stateMachine.getCurrentState()) {
+                    States.ClimbState -> InstantCommand({ climber.setVoltage((-12.0).volts) })
+                    else -> Commands.none()
+                }
+            )}))
+                .onFalse(InstantCommand({ climber.setVoltage(0.0.volts) }))
+
+
+        controller.povDown().whileTrue(Commands.run({
+            scheduleCMD(
+                when (stateMachine.getCurrentState()) {
+                    States.ClimbState -> InstantCommand({ climber.setVoltage(12.0.volts) })
+                    else -> enableAlgaeOuttake()
+                }
+            )}))
+            .onFalse(InstantCommand({ climber.setVoltage(0.0.volts) }))
+
+        controller.leftBumper()
+            .onTrue(Commands.runOnce({scheduleCMD(when (stateMachine.getCurrentState()) {
+                States.ScoreState -> scoringSequence(targetPose, ArmOrders.JEW.order)
+                else -> Commands.none()
+            })}))
+
+        controller.povRight().onTrue(SequentialCommandGroup(
+            setPoseCommand(ArmPoses.A1, ArmOrders.JEW.order),
+            enableAlgaeIntake((-6.0).volts)
         )
-
-        // POV right
-        controller.povRight().onTrue(
-            Commands.sequence(
-                enableIntake(3.0),
-                setPoseCommand(ArmPoses.Processor.pose, ArmOrders.EWJ.order, 1),
-                disableIntake(),
-                Commands.runOnce({ stateMachine.changeState(States.AlgaeState) })
-            )
         )
-
-        // POV up
-        controller.povUp().onTrue(
-            Commands.sequence(
-                setPoseCommand(ArmPoses.coralFloorIntake.pose, ArmOrders.EWJ.order)
-            )
-        )
-
-        controller.leftBumper().onTrue(enableOuttake()).onFalse(disableIntake())
+        controller.povLeft().onTrue(Commands.runOnce({ wrist.onMatchRelativeEncodersToAbsoluteEncoders() }) )
     }
-
 }

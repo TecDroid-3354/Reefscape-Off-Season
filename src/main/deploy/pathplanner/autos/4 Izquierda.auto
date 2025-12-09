@@ -11,13 +11,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "C1-Left-bargeToReef"
+                  "pathName": "C1-Left4-bargeToReef"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "ArmL3PoseEWJ"
+                  "name": "ArmBackL3PoseWJE"
                 }
               }
             ]
@@ -26,45 +26,7 @@
         {
           "type": "named",
           "data": {
-            "name": "AlignAndScoreRightBranch"
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": [
-              {
-                "type": "parallel",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "ArmCoralStationPose"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "C2-Left-reefToCoralStation"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "EnableIntake"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 0.1
-                }
-              }
-            ]
+            "name": "L4-AlignScoreLeftBranch"
           }
         },
         {
@@ -72,15 +34,15 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "EnableIntakeUntilHasCoral"
+                  "pathName": "C2-Left4-reefToCoralStation"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "StopMotors"
+                  "name": "FeedCoralStation"
                 }
               }
             ]
@@ -99,7 +61,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ArmL3PoseEWJ"
+                  "name": "ArmBackL3PoseWJE"
                 }
               }
             ]
@@ -108,45 +70,7 @@
         {
           "type": "named",
           "data": {
-            "name": "AlignAndScoreRightBranch"
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": [
-              {
-                "type": "parallel",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "ArmCoralStationPose"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "C3-Left-reefToCoralStation"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "EnableIntake"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 0.1
-                }
-              }
-            ]
+            "name": "L4-AlignScoreRightBranch"
           }
         },
         {
@@ -154,15 +78,15 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "EnableIntakeUntilHasCoral"
+                  "pathName": "C3-Left4-reefToCoralStation"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "StopMotors"
+                  "name": "FeedCoralStation"
                 }
               }
             ]
@@ -175,13 +99,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "C3-Left-coralStationToReef"
+                  "pathName": "C3-Left4-coralStationToReef"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "ArmL3PoseEWJ"
+                  "name": "ArmBackL3PoseWJE"
                 }
               }
             ]
@@ -190,13 +114,57 @@
         {
           "type": "named",
           "data": {
-            "name": "AlignAndScoreLeftBranch"
+            "name": "L4-AlignScoreLeftBranch"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C4-Left4-reefToCoralStation"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "FeedCoralStation"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "C4-Left4-coralStationToReef"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ArmBackL3PoseWJE"
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "ArmL2PoseJEW"
+            "name": "L4-AlignScoreRightBranch"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "FloorIntakeSafePos"
           }
         }
       ]

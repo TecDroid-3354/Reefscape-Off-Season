@@ -28,8 +28,8 @@ data class ElevatorConfig(
 )
 
 val elevatorConfig = ElevatorConfig(
-    leadMotorControllerId = NumericId(53),
-    followerMotorId = NumericId(54),
+    leadMotorControllerId = NumericId(50),
+    followerMotorId = NumericId(51),
     motorDirection = Clockwise,
     motorCurrentLimit = 40.0.amps,
 
@@ -38,9 +38,9 @@ val elevatorConfig = ElevatorConfig(
 
     measureLimits = MeasureLimits(
         absoluteMinimum = 0.0.meters,
-        relativeMinimum = 0.0125.meters,
+        relativeMinimum = 0.001.meters,
         relativeMaximum = 1.040.meters,
-        absoluteMaximum = 1.042.meters,
+        absoluteMaximum = 1.042.meters
     ),
 
     controlGains = ControlGains(

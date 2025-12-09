@@ -6,19 +6,23 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.NeutralModeValue
+import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.Rotations
-import edu.wpi.first.units.Units.Second
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.util.sendable.SendableBuilder
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.button.Trigger
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import net.tecdroid.subsystems.util.generic.*
-import net.tecdroid.util.rotations
+import net.tecdroid.subsystems.util.identification.GenericSysIdRoutine
+import net.tecdroid.util.volts
 import net.tecdroid.wrappers.ThroughBoreAbsoluteEncoder
+import java.util.function.BooleanSupplier
 
-class Wrist :
+class Wrist(isClimbStateActive: BooleanSupplier) :
     TdSubsystem("Wrist"),
     LoggableSubsystem,
     WithThroughBoreAbsoluteEncoder,
@@ -30,17 +34,22 @@ class Wrist :
     override val absoluteEncoder = ThroughBoreAbsoluteEncoder(
         port = config.absoluteEncoderPort,
         offset = config.absoluteEncoderOffset,
-        inverted = config.absoluteEncoderIsInverted
+        inverted = config.absoluteEncoderIsInverted,
+        brand = config.absoluteEncoderBrand,
+        canBusName = "rio"
     )
 
     override val forwardsRunningCondition  = { angle < config.measureLimits.relativeMaximum }
     override val backwardsRunningCondition = { angle > config.measureLimits.relativeMinimum }
+
+    val sysId = createIdentificationRoutine()
 
     init {
         configureMotorInterface()
         matchRelativeEncodersToAbsoluteEncoders()
         publishToShuffleboard()
         target = motorPosition
+        Trigger { isClimbStateActive.asBoolean }.whileTrue(Commands.run({ setVoltage(0.0.volts) }))
     }
 
     override fun setVoltage(voltage: Voltage) {
@@ -72,6 +81,20 @@ class Wrist :
         } else {
             val request = MotionMagicVoltage(transformedAngle).withSlot(0)
             motorController.setControl(request)
+        }
+    }
+
+    fun sysIdDynamic(direction: SysIdRoutine.Direction): Command {
+        return when (direction) {
+            SysIdRoutine.Direction.kForward -> sysId.createTests().dynamicForward
+            SysIdRoutine.Direction.kReverse -> sysId.createTests().dynamicBackward
+        }
+    }
+
+    fun sysIdQuasistatic(direction: SysIdRoutine.Direction): Command {
+        return when (direction) {
+            SysIdRoutine.Direction.kForward -> sysId.createTests().quasistaticForward
+            SysIdRoutine.Direction.kReverse -> sysId.createTests().quasistaticBackward
         }
     }
 
@@ -140,8 +163,8 @@ class Wrist :
 
     override fun initSendable(builder: SendableBuilder) {
         with(builder) {
-            addDoubleProperty("Current Angle (Rotations)", { angle.`in`(Rotations) }, {})
-            addDoubleProperty("Current Absolute Angle (Rotations)", { absoluteAngle.`in`(Rotations) }, {})
+            addDoubleProperty("Current Angle (Degrees)", { angle.`in`(Degrees) }, {})
+            addDoubleProperty("Current Absolute Angle (Degrees)", { absoluteAngle.`in`(Degrees) }, {})
         }
     }
 

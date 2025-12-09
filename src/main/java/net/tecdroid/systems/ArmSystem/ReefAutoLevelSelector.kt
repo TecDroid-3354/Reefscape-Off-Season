@@ -1,20 +1,22 @@
 package net.tecdroid.systems.ArmSystem
 
-import net.tecdroid.util.NumericId
+import edu.wpi.first.wpilibj.Alert
 import net.tecdroid.vision.limelight.systems.LimeLightChoice
+import net.tecdroid.vision.limelight.systems.LimelightController
 
 data class Level(val poseCommand: PoseCommands, var occupied: Boolean = false)
 
-data class Branch(val L2: Level = Level(PoseCommands.L2), val L3: Level = Level(PoseCommands.L3),
-                  val L4: Level = Level(PoseCommands.L4))
+data class Branch(val BackL2: Level = Level(PoseCommands.BackL2), val BackL3: Level = Level(PoseCommands.BackL3),
+                  val BackL4: Level = Level(PoseCommands.BackL4))
 
 data class Side(val leftBranch: Branch = Branch(), val rightBranch: Branch = Branch())
+enum class BranchSide { Right, Left }
 
 data class Reef(val side1: Side = Side(), val side2: Side = Side(),
                 val side3: Side = Side(), val side4: Side = Side(),
                 val side5: Side = Side(), val side6: Side = Side())
 
-class ReefAutoLevelSelector {
+class ReefAutoLevelSelector(private val llController: LimelightController) {
     val reef = Reef()
 
     val sideMap = mapOf(
@@ -26,48 +28,52 @@ class ReefAutoLevelSelector {
         9 to reef.side6, 22 to reef.side6
     )
 
-    fun getBetterLevel(aprilTagId: Int, limeLightChoice: LimeLightChoice): PoseCommands? {
-        return sideMap[aprilTagId]?.let { side ->
-            val choice = when (limeLightChoice) {
-                LimeLightChoice.Left -> side.leftBranch
-                LimeLightChoice.Right -> side.rightBranch
-            }
-
-            listOf(choice.L4, choice.L3, choice.L2)
-                .firstOrNull { !it.occupied }
-                ?.poseCommand
-        }
-    }
-
-    fun fillLevel(branchChoice: BranchChoice) {
-        sideMap[branchChoice.apriltagId]?.let { side ->
-            val choice = when (branchChoice.sideChoice) {
-                LimeLightChoice.Left -> side.leftBranch
-                LimeLightChoice.Right -> side.rightBranch
-            }
-
-            when (branchChoice.levelPose) {
-                PoseCommands.L4 -> choice.L4.occupied = true
-                PoseCommands.L3 -> choice.L3.occupied = true
-                PoseCommands.L2 -> choice.L2.occupied = true
-                PoseCommands.CoralStation -> TODO("No se puede seleccionar esa posicion para llenar como nivel")
-            }
-        }
-    }
-
-    fun emptyLevel(branchChoice: BranchChoice) {
-        sideMap[branchChoice.apriltagId]?.let { side ->
-            val choice = when (branchChoice.sideChoice) {
-                LimeLightChoice.Left -> side.leftBranch
-                LimeLightChoice.Right -> side.rightBranch
-            }
-
-            when (branchChoice.levelPose) {
-                PoseCommands.L4 -> choice.L4.occupied = false
-                PoseCommands.L3 -> choice.L3.occupied = false
-                PoseCommands.L2 -> choice.L2.occupied = false
-                PoseCommands.CoralStation -> TODO("No se puede seleccionar esa posicion para llenar como nivel")
-            }
-        }
-    }
+//    fun getBetterLevel(aprilTagId: Int, branchSide: BranchSide): PoseCommands? {
+//        return sideMap[aprilTagId]?.let { side ->
+//            val choice = llController.getLimelight(branchSide)}
+//
+//            listOf(choice.BackL4, choice.BackL3, choice.BackL2)
+//                .firstOrNull { !it.occupied }
+//                ?.poseCommand
+//        }
+//    }
+//
+//    fun fillLevel(branchChoice: BranchChoice) {
+//        sideMap[branchChoice.apriltagId]?.let { side ->
+//            val choice = when (branchChoice.sideChoice) {
+//                LimeLightChoice.Left -> side.leftBranch
+//                LimeLightChoice.Right -> side.rightBranch
+//                LimeLightChoice.Front -> side.rightBranch // TODO() = Front logic to choose branch
+//
+//            }
+//
+//            when (branchChoice.levelPose) {
+//                PoseCommands.BackL4 -> choice.BackL4.occupied = true
+//                PoseCommands.BackL3 -> choice.BackL3.occupied = true
+//                PoseCommands.BackL2 -> choice.BackL2.occupied = true
+//                PoseCommands.CoralStation -> Alert("CoralStation is not a Reef level", Alert.AlertType.kError)
+//                PoseCommands.Processor -> Alert("Processor is not a Reef level", Alert.AlertType.kError)
+//                PoseCommands.Passive -> Alert("Passive is not a Reef level", Alert.AlertType.kError)
+//            }
+//        }
+//    }
+//
+//    fun emptyLevel(branchChoice: BranchChoice) {
+//        sideMap[branchChoice.apriltagId]?.let { side ->
+//            val choice = when (branchChoice.sideChoice) {
+//                LimeLightChoice.Left -> side.leftBranch
+//                LimeLightChoice.Right -> side.rightBranch
+//                LimeLightChoice.Front -> side.rightBranch // TODO () = Front logic to choose branch
+//            }
+//
+//            when (branchChoice.levelPose) {
+//                PoseCommands.BackL4 -> choice.BackL4.occupied = false
+//                PoseCommands.BackL3 -> choice.BackL3.occupied = false
+//                PoseCommands.BackL2 -> choice.BackL2.occupied = false
+//                PoseCommands.CoralStation -> Alert("CoralStation is not a Reef level", Alert.AlertType.kError)
+//                PoseCommands.Processor -> Alert("Processor is not a Reef level", Alert.AlertType.kError)
+//                PoseCommands.Passive -> Alert("Passive is not a Reef level", Alert.AlertType.kError)
+//            }
+//        }
+//    }
 }

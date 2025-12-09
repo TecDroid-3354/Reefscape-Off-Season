@@ -12,6 +12,7 @@ import net.tecdroid.util.rotations
 import net.tecdroid.util.seconds
 import net.tecdroid.safety.MeasureLimits
 import net.tecdroid.util.RotationalDirection.Counterclockwise
+import net.tecdroid.wrappers.ThroughBoreBrand
 
 data class WristConfig(
     val motorControllerId: NumericId,
@@ -21,6 +22,7 @@ data class WristConfig(
     val absoluteEncoderPort: NumericId,
     val absoluteEncoderIsInverted: Boolean,
     val absoluteEncoderOffset: Angle,
+    val absoluteEncoderBrand: ThroughBoreBrand,
 
     val reduction: Reduction,
     val measureLimits: MeasureLimits<AngleUnit>,
@@ -30,40 +32,41 @@ data class WristConfig(
 )
 
 val wristConfig = WristConfig(
-    motorControllerId = NumericId(61),
+    motorControllerId = NumericId(55),
     motorDirection = Counterclockwise,
-    motorCurrentLimit = 30.0.amps,
+    motorCurrentLimit = 40.0.amps,
 
-    absoluteEncoderPort = NumericId(2),
+    absoluteEncoderPort = NumericId(56),
     absoluteEncoderIsInverted = false,
-    absoluteEncoderOffset = (0.1511).rotations,
+    absoluteEncoderOffset = 0.0302734375.rotations - 10.0.degrees,
+    absoluteEncoderBrand = ThroughBoreBrand.WCP,
 
-    reduction = Reduction(214.285714),
+    reduction = Reduction(90.7407),
 
     measureLimits = MeasureLimits(
-        absoluteMinimum = 0.0.rotations,
-        relativeMinimum = 0.021.rotations,
-        relativeMaximum = 0.3704.rotations + 2.0.degrees,
-        absoluteMaximum = 0.3848.rotations,
+        absoluteMinimum = (-65.0).degrees,
+        relativeMinimum = (-50.0).degrees,
+        relativeMaximum = 115.0.degrees,
+        absoluteMaximum = 120.0.degrees,
     ),
 
     controlGains = ControlGains(
-        p = 0.1,
-        s = 0.11467,
-        v = 0.11121,
-        a = 0.0019705,
-        g = 0.0039384
+        p = 0.195, // original value (as per oct-9): 0.1
+        s = 0.31615,
+        v = 0.09368, // original value: 0.08368
+        a = 0.0033398, // original value: 0.0033398
+        g = 0.043887 + 0.45
     ),
 
     motionTargets = AngularMotionTargets(
-        cruiseVelocity = 0.5.rotations.per(Second),
+        cruiseVelocity = 1.0.rotations.per(Second),
         accelerationTimePeriod = 0.1.seconds,
         jerkTimePeriod = 0.1.seconds
     ),
 
     algaeMotionTargets = AngularMotionTargets(
-        cruiseVelocity = 0.125.rotations.per(Second),
-        accelerationTimePeriod = 0.5.seconds,
-        jerkTimePeriod = 0.3.seconds
+        cruiseVelocity = 1.0.rotations.per(Second),
+        accelerationTimePeriod = 0.1.seconds,
+        jerkTimePeriod = 0.0.seconds
     )
 )

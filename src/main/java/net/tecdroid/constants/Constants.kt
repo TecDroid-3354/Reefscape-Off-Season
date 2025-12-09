@@ -24,6 +24,7 @@ import net.tecdroid.util.NumericId
  */
 object Constants {
     val driverControllerId = NumericId(0)
+    const val ALTERNATE_CANBUS_NAME = "canivore"
 
     val simMode: Mode = Mode.SIM
     @JvmField

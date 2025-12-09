@@ -15,6 +15,7 @@ import edu.wpi.first.units.measure.Frequency
 import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Time
 import edu.wpi.first.wpilibj.util.Color
+import edu.wpi.first.wpilibj2.command.Commands
 import frc.robot.LimelightHelpers
 import net.tecdroid.util.*
 
@@ -459,7 +460,7 @@ class LimelightAprilTagDetector(config: LimelightConfig): Limelight(config) {
             setDoubleArray(LimelightTableKeys.Set.robotOrientation, orientationToRawData(value.first, value.second))
         }
 
-
+    fun setThrottle(value: Int) { setNumber(LimelightTableKeys.Set.throttle, value) }
 }
 
 /**
@@ -529,11 +530,15 @@ class LimelightBarcodeDetector(config: LimelightConfig): Limelight(config) {
 //
 
 internal fun rawDataToPose3d(data: DoubleArray) : Pose3d {
-    require(data.size >= 6) { "Data must have at least 6 entries" }
-    return Pose3d(
-        Translation3d(data[0], data[1] , data[2]),
-        Rotation3d(data[3], data[4], data[5])
-    )
+    try {
+        return Pose3d(
+            Translation3d(data[0], data[1] , data[2]),
+            Rotation3d(data[3], data[4], data[5])
+        )
+    } catch (e: Exception) {
+        Commands.print("Limelight disconnected. Can't call rawDataToPose3d (less than 6 entries)")
+    }
+    return Pose3d.kZero
 }
 
 internal fun pose3dToRawData(pose: Pose3d) : DoubleArray {

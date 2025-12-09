@@ -5,8 +5,8 @@ import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.DriverStation.Alliance
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import net.tecdroid.util.NumericId
 import net.tecdroid.vision.limelight.systems.LimeLightChoice
+import net.tecdroid.vision.limelight.systems.LimelightController
 
 data class BranchChoice (
     var apriltagId: Int,
@@ -14,14 +14,14 @@ data class BranchChoice (
     var sideChoice: LimeLightChoice
 )
 
-class ReefAppListener(): SubsystemBase() {
-    private val reefAutoLevelSelector = ReefAutoLevelSelector()
+class ReefAppListener(llController: LimelightController): SubsystemBase() {
+    private val reefAutoLevelSelector = ReefAutoLevelSelector(llController)
 
     // Network table
     private val table = NetworkTableInstance.getDefault().getTable("ReefAppData")
 
     // Branch choice object
-    val branchChoice = BranchChoice(0, PoseCommands.L2, LimeLightChoice.Right)
+    val branchChoice = BranchChoice(0, PoseCommands.BackL2, LimeLightChoice.Right)
 
     private fun shuffleboardData() {
         val tab = Shuffleboard.getTab("Driver Tab")
@@ -35,7 +35,7 @@ class ReefAppListener(): SubsystemBase() {
         shuffleboardData()
     }
 
-    fun getBetterLevel(aprilTagId: Int, limeLightChoice: LimeLightChoice): PoseCommands? = reefAutoLevelSelector.getBetterLevel(aprilTagId, limeLightChoice)
+    //fun getBetterLevel(aprilTagId: Int, branchSide: BranchSide): PoseCommands? = reefAutoLevelSelector.getBetterLevel(aprilTagId, branchSide)
 
     override fun periodic() {
         val apriltagId = table.getEntry("ApriltagId").getString("Apriltag id not found")
@@ -65,24 +65,24 @@ class ReefAppListener(): SubsystemBase() {
 
         // Select level
         when (level) {
-            "L2" -> branchChoice.levelPose = PoseCommands.L2
-            "L3" -> branchChoice.levelPose = PoseCommands.L3
-            "L4" -> branchChoice.levelPose = PoseCommands.L4
-            //else -> println("Not registered pose")
+            "L2" -> branchChoice.levelPose = PoseCommands.BackL2
+            "L3" -> branchChoice.levelPose = PoseCommands.BackL3
+            "L4" -> branchChoice.levelPose = PoseCommands.BackL4
+            else -> {}//println("Not registered pose")
         }
 
         // Select side
         when (side) {
             "right" -> branchChoice.sideChoice = LimeLightChoice.Right
             "left" -> branchChoice.sideChoice = LimeLightChoice.Left
-            //else -> println("Not registered side")
+            else -> {}//println("Not registered side")
         }
 
-        when (action) {
-            "fill" -> reefAutoLevelSelector.fillLevel(branchChoice) // Fill level in reef auto level selector
-            "empty" -> reefAutoLevelSelector.emptyLevel(branchChoice) // Fill level in reef auto level selector
-            //else -> println("Not registered action")
-        }
+//        when (action) {
+//            "fill" -> reefAutoLevelSelector.fillLevel(branchChoice) // Fill level in reef auto level selector
+//            "empty" -> reefAutoLevelSelector.emptyLevel(branchChoice) // Fill level in reef auto level selector
+//            else -> {}//println("Not registered action")
+//        }
 
 
     }
